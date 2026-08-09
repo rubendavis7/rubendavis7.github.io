@@ -75,7 +75,11 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--orange);outline-off
 /* ---------- hero ---------- */
 .hero{background:linear-gradient(180deg,var(--navy) 0%,#16305F 100%);color:#fff;padding:58px 0 66px}
 .hero .wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:44px;align-items:center}
-@media(max-width:880px){.hero .wrap{grid-template-columns:1fr}}
+@media(max-width:880px){
+  .hero{padding-top:26px}
+  .hero .wrap{grid-template-columns:1fr}
+  .hero .adv{order:-1}   /* advisor card first on phones */
+}
 .hero .eyebrow{border-color:rgba(255,255,255,.4);color:#FFB68C}
 .hero h1{font-size:clamp(34px,5.2vw,54px);font-weight:800;color:#fff;margin:18px 0 12px}
 .hero .lede{font-size:clamp(17px,2.2vw,21px);color:#C9D4EE;max-width:34em}
