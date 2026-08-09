@@ -251,7 +251,7 @@ table.cad td{padding:8px;border-bottom:1px solid var(--line)}
     </svg>
     <div>
       <div class="word">DeltaCapital<span> · Ruben's Funding Desk</span></div>
-      <div class="sub">Ruben Davis — Funding Specialist</div>
+      <div class="sub">Ruben Davis — Funding Advisor</div>
     </div>
   </div>
   <div class="spacer"></div>
@@ -353,7 +353,7 @@ const digits=p=>String(p||'').replace(/[^\d+]/g,'');
 let state=load();
 function load(){
   try{const raw=localStorage.getItem(KEY);if(raw)return JSON.parse(raw);}catch(e){}
-  return {leads:seed(),settings:{rep:'Ruben Davis',myphone:'',link:'https://deltacapitalgroup.com/ruben/'},view:'board',personalizeId:''};
+  return {leads:seed(),settings:{rep:'Ruben Davis',myphone:'(305) 735-3097',link:'https://deltacapitalgroup.com/ruben/'},view:'board',personalizeId:''};
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
 function seed(){
@@ -399,7 +399,7 @@ See what {{biz}} qualifies for here (about 5 minutes):
 Or just reply with a good time and I'll call you.
 
 {{rep}}
-Funding Specialist · Delta Capital Group
+Funding Advisor · Delta Capital Group
 {{myphone}}
 {{link}}`},
  {name:'After a good call',use:'Warm — send within 10 minutes of hanging up',
@@ -419,7 +419,7 @@ Next step takes about 5 minutes:
 The moment it's in, I hand-carry it to underwriting. Call or text me anytime.
 
 {{rep}}
-Funding Specialist · Delta Capital Group
+Funding Advisor · Delta Capital Group
 {{myphone}}`},
  {name:'Application nudge',use:'App stage — started but not finished / no statements yet',
   subj:'{{first}}, you\'re 5 minutes from an offer',
@@ -432,7 +432,7 @@ Finish here: {{link}}
 If anything on the form is annoying, call me — I'll fill it out WITH you on the phone in five minutes.
 
 {{rep}}
-Funding Specialist · Delta Capital Group
+Funding Advisor · Delta Capital Group
 {{myphone}}`},
  {name:'Offer delivered',use:'Approved — send the moment the offer is in hand',
   subj:'APPROVED ✅ {{biz}} — your offer is in',
@@ -451,7 +451,7 @@ Two things to know:
 Call or text me today: {{myphone}}
 
 {{rep}}
-Funding Specialist · Delta Capital Group`},
+Funding Advisor · Delta Capital Group`},
  {name:'Contracts out',use:'Contracts stage — docs sent, chasing signature + stips',
   subj:'Contracts for {{biz}} — sign today, funds as soon as tomorrow',
   body:`Hi {{first}},
@@ -468,7 +468,7 @@ The moment those land, I move you straight to funding — most wires hit within 
 Stuck on anything? Call me and we'll knock it out together: {{myphone}}
 
 {{rep}}
-Funding Specialist · Delta Capital Group`},
+Funding Advisor · Delta Capital Group`},
  {name:'Declined — leave the door open',use:'Declined — send same day, sets up the revival',
   subj:'{{biz}} — declined today is not declined forever',
   body:`Hi {{first}},
@@ -482,7 +482,7 @@ Straight answer: underwriting passed on {{biz}} today. I know that's not what yo
 I've set a reminder to re-run you in 45 days — no hard pull, no new paperwork if nothing changed. If revenue jumps sooner, call me and I'll run it same day.
 
 {{rep}}
-Funding Specialist · Delta Capital Group
+Funding Advisor · Delta Capital Group
 {{myphone}}`},
  {name:'Funded — congrats + renewal seed',use:'Funded — day of wire',
   subj:'Congrats {{first}} — funds are on the way 🎉',
@@ -493,7 +493,7 @@ One heads-up worth money: once you're roughly 50% paid down, you unlock RENEWAL 
 Until then: keep deposits steady, avoid negative days, and if anything comes up — payroll crunch, equipment deal, tax bill — call me first.
 
 {{rep}}
-Funding Specialist · Delta Capital Group
+Funding Advisor · Delta Capital Group
 {{myphone}}
 {{link}}`},
 ];
