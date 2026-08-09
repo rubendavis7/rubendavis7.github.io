@@ -1,0 +1,1011 @@
+<title>Ruben's Funding Desk — Delta Capital</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+/* ---------- Brand tokens (Delta Capital Group) ---------- */
+:root{
+  --navy:#0F2148;          /* chrome / headings */
+  --navy-2:#1E3C6E;        /* icon circles, chips */
+  --orange:#E8611F;        /* primary action only */
+  --orange-soft:#FBE9DE;
+  --ground:#F3F5FB;        /* page */
+  --card:#FFFFFF;
+  --panel:#E9EDF8;         /* lavender section cards, like the site */
+  --ink:#13203B;
+  --muted:#5B6270;
+  --line:#D9DFEE;
+  --chrome-ink:#FFFFFF;
+  --chrome-muted:#AAB6D3;
+  /* stage ramp — deliberately no orange, so "action" never reads as "stage" */
+  --st-cold:#64748B; --st-warm:#0E8F76; --st-app:#2563EB; --st-appr:#7C3AED;
+  --st-con:#0891B2; --st-fund:#15803D; --st-dec:#9F1239;
+  --ok:#15803D; --warn:#B45309; --bad:#B91C1C;
+  --shadow:0 10px 30px rgba(15,33,72,.10);
+  --r:20px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0B1120; --card:#141C30; --panel:#182240;
+    --ink:#E8ECF6; --muted:#9AA4BC; --line:#2A3554;
+    --orange-soft:#3A2415; --shadow:0 10px 30px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0B1120; --card:#141C30; --panel:#182240;
+  --ink:#E8ECF6; --muted:#9AA4BC; --line:#2A3554;
+  --orange-soft:#3A2415; --shadow:0 10px 30px rgba(0,0,0,.45);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--ground); color:var(--ink);
+  font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.money,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:3px solid var(--orange);outline-offset:2px;border-radius:6px}
+input,select,textarea{
+  font:inherit;color:var(--ink);background:var(--card);
+  border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;width:100%}
+label{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+
+/* ---------- Chrome ---------- */
+header{
+  background:var(--navy);color:var(--chrome-ink);
+  padding:14px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px}
+.logo svg{flex:none}
+.logo .word{font-weight:800;font-size:19px;letter-spacing:-.01em}
+.logo .word span{font-weight:400}
+.logo .sub{font-size:11.5px;color:var(--chrome-muted);letter-spacing:.14em;text-transform:uppercase}
+.spacer{flex:1}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;justify-content:center;
+  border-radius:999px;padding:10px 18px;font-weight:700;white-space:nowrap;
+  transition:transform .08s ease, box-shadow .08s ease}
+@media (prefers-reduced-motion: reduce){.btn{transition:none}}
+.btn:active{transform:scale(.97)}
+.btn-orange{background:var(--orange);color:#fff;box-shadow:0 6px 18px rgba(232,97,31,.35)}
+.btn-ghost{border:1.5px solid var(--line);color:var(--ink);background:var(--card)}
+.btn-chrome{border:1.5px solid rgba(255,255,255,.35);color:#fff}
+.btn-sm{padding:6px 12px;font-size:13px}
+.btn-danger{color:var(--bad);border:1.5px solid var(--line);background:var(--card)}
+
+.stats{display:flex;gap:10px;padding:12px 18px 0;flex-wrap:wrap}
+.stat{
+  background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:10px 16px;min-width:130px;flex:1;box-shadow:var(--shadow)}
+.stat .k{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.stat .v{font-size:21px;font-weight:800;margin-top:2px}
+.stat .v.money{letter-spacing:-.02em}
+.stat.due .v{color:var(--bad)}
+
+nav.tabs{display:flex;gap:8px;padding:14px 18px 4px;flex-wrap:wrap}
+.tab{
+  border-radius:999px;padding:9px 20px;font-weight:700;color:var(--navy-2);
+  border:1.5px solid var(--navy-2);background:transparent}
+:root[data-theme="dark"] .tab{color:#B9C6EA;border-color:#3D4E7E}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tab{color:#B9C6EA;border-color:#3D4E7E}}
+.tab[aria-selected="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+main{padding:14px 18px 90px;max-width:1400px;margin:0 auto}
+
+/* ---------- Board ---------- */
+.toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.toolbar input[type=search]{max-width:280px}
+.board{display:flex;gap:12px;overflow-x:auto;padding-bottom:16px;align-items:flex-start}
+.col{flex:0 0 272px;background:var(--panel);border-radius:var(--r);padding:10px}
+.col h3{
+  margin:2px 4px 10px;font-size:13px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+  display:flex;align-items:center;gap:8px}
+.col h3 .dot{width:10px;height:10px;border-radius:50%;flex:none}
+.col h3 .n{margin-left:auto;font-size:12px;color:var(--muted);font-weight:700}
+.col h3 .sum{font-size:11px;color:var(--muted);font-weight:600}
+.col.dragover{outline:2.5px dashed var(--orange);outline-offset:-3px}
+.cards{display:flex;flex-direction:column;gap:8px;min-height:30px}
+.cardl{
+  background:var(--card);border-radius:14px;padding:11px 12px;box-shadow:var(--shadow);
+  border-left:4px solid var(--muted);cursor:grab}
+.cardl:active{cursor:grabbing}
+.cardl .biz{font-weight:800;font-size:14.5px}
+.cardl .who{color:var(--muted);font-size:12.5px;margin-top:1px}
+.cardl .amts{display:flex;gap:10px;margin-top:7px;font-size:12.5px}
+.cardl .amts b{font-size:13.5px}
+.cardl .amts .lbl{display:block;font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.cardl .foot{display:flex;align-items:center;gap:6px;margin-top:9px;flex-wrap:wrap}
+.chip{font-size:11px;font-weight:700;border-radius:999px;padding:3px 9px;white-space:nowrap}
+.chip.overdue{background:#FBE3E3;color:var(--bad)}
+.chip.today{background:#FDEFD9;color:var(--warn)}
+.chip.later{background:var(--panel);color:var(--muted)}
+:root[data-theme="dark"] .chip.overdue{background:#3A1717}
+:root[data-theme="dark"] .chip.today{background:#3A2A12}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .chip.overdue{background:#3A1717}
+  :root:not([data-theme="light"]) .chip.today{background:#3A2A12}
+}
+.iconb{
+  width:30px;height:30px;border-radius:50%;background:var(--navy-2);color:#fff;
+  display:inline-flex;align-items:center;justify-content:center;font-size:14px;flex:none;text-decoration:none}
+.cardl .foot .iconb{margin-left:auto}
+.cardl .foot .iconb + .iconb{margin-left:0}
+.empty{color:var(--muted);font-size:13px;text-align:center;padding:14px 6px}
+
+/* ---------- Today ---------- */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.panel{background:var(--panel);border-radius:var(--r);padding:18px}
+.panel>h2{margin:0 0 4px;font-size:19px;color:var(--navy);letter-spacing:-.01em}
+:root[data-theme="dark"] .panel>h2{color:#DCE4F8}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .panel>h2{color:#DCE4F8}}
+.panel>.sub{color:var(--muted);font-size:13px;margin-bottom:14px}
+.block{display:flex;gap:12px;background:var(--card);border-radius:14px;padding:11px 13px;margin-bottom:8px;box-shadow:var(--shadow)}
+.block .t{font-family:ui-monospace,Menlo,monospace;font-size:12px;font-weight:700;color:var(--navy-2);white-space:nowrap;padding-top:2px;min-width:86px}
+:root[data-theme="dark"] .block .t{color:#9FB4E8}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .block .t{color:#9FB4E8}}
+.block .w{font-weight:800;font-size:14px}
+.block .d{color:var(--muted);font-size:12.5px;margin-top:1px}
+.qrow{display:flex;align-items:center;gap:9px;background:var(--card);border-radius:14px;padding:10px 12px;margin-bottom:8px;box-shadow:var(--shadow);flex-wrap:wrap}
+.qrow .info{flex:1;min-width:150px;cursor:pointer}
+.qrow .biz{font-weight:800;font-size:14px}
+.qrow .meta{font-size:12px;color:var(--muted)}
+.stagechip{font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#fff;border-radius:999px;padding:3px 10px;white-space:nowrap}
+
+/* ---------- Templates ---------- */
+.pickbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.pickbar select{max-width:340px}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:1000px){.tgrid{grid-template-columns:1fr}}
+.tpl{background:var(--card);border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow)}
+.tpl .name{font-weight:800;font-size:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tpl .name .use{font-size:11px;font-weight:700;color:var(--muted)}
+.tpl .subj{font-size:13px;margin-top:6px}
+.tpl .subj b{color:var(--navy-2)}
+:root[data-theme="dark"] .tpl .subj b{color:#9FB4E8}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tpl .subj b{color:#9FB4E8}}
+.tpl pre{
+  white-space:pre-wrap;background:var(--panel);border-radius:12px;padding:12px;
+  font:13px/1.55 Georgia,"Times New Roman",serif;margin:9px 0 10px;color:var(--ink)}
+.tpl .row{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ---------- Playbook ---------- */
+.pb{max-width:860px}
+.pb .panel{margin-bottom:14px}
+.numbers{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:8px}
+.numbers .nb{background:var(--card);border-radius:14px;padding:12px;box-shadow:var(--shadow)}
+.numbers .nb .v{font-size:19px;font-weight:800;color:var(--navy);letter-spacing:-.02em}
+:root[data-theme="dark"] .numbers .nb .v{color:#DCE4F8}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .numbers .nb .v{color:#DCE4F8}}
+.numbers .nb .k{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.script{background:var(--card);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);margin-top:10px}
+.script p{margin:8px 0}
+.script .say{font-family:Georgia,serif;font-size:15px}
+.script .cue{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--orange)}
+.check{display:flex;gap:9px;align-items:flex-start;margin:7px 0}
+.check .ck{width:19px;height:19px;border-radius:50%;background:var(--orange);color:#fff;display:inline-flex;
+  align-items:center;justify-content:center;font-size:11px;font-weight:900;flex:none;margin-top:2px}
+table.cad{width:100%;border-collapse:collapse;margin-top:8px;font-size:13.5px}
+table.cad th{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);text-align:left;padding:7px 8px;border-bottom:2px solid var(--line)}
+table.cad td{padding:8px;border-bottom:1px solid var(--line)}
+.notebox{border-left:4px solid var(--warn);background:var(--card);border-radius:0 14px 14px 0;padding:11px 14px;margin-top:12px;font-size:13.5px;box-shadow:var(--shadow)}
+
+/* ---------- Drawer / modal / toast ---------- */
+.scrim{position:fixed;inset:0;background:rgba(15,33,72,.45);display:none;z-index:40}
+.scrim.open{display:block}
+.drawer{
+  position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:var(--card);
+  z-index:50;box-shadow:-18px 0 50px rgba(15,33,72,.25);transform:translateX(105%);
+  transition:transform .22s ease;display:flex;flex-direction:column}
+@media (prefers-reduced-motion: reduce){.drawer{transition:none}}
+.drawer.open{transform:none}
+.drawer .dh{background:var(--navy);color:#fff;padding:16px 18px}
+.drawer .dh .biz{font-size:19px;font-weight:800;letter-spacing:-.01em}
+.drawer .dh .row{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.drawer .dh select{width:auto;background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.35)}
+.drawer .dh select option{color:var(--ink);background:var(--card)}
+.drawer .body{flex:1;overflow-y:auto;padding:16px 18px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin-bottom:14px}
+.fgrid .f .lv{font-size:14px;font-weight:600;margin-top:2px;word-break:break-word}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 16px}
+.notes h4{margin:0 0 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.note{background:var(--panel);border-radius:12px;padding:9px 12px;margin-bottom:7px;font-size:13.5px}
+.note .ts{font-size:11px;color:var(--muted);font-weight:700}
+.drawer .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px}
+.addnote{display:flex;gap:8px;margin-bottom:12px}
+
+.modal{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;padding:16px}
+.modal.open{display:flex}
+.modal .mcard{background:var(--card);border-radius:var(--r);width:min(560px,100%);max-height:92vh;overflow-y:auto;padding:20px;box-shadow:var(--shadow)}
+.modal h2{margin:0 0 14px;color:var(--navy);font-size:20px}
+:root[data-theme="dark"] .modal h2{color:#DCE4F8}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .modal h2{color:#DCE4F8}}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mgrid .full{grid-column:1/-1}
+@media(max-width:520px){.mgrid{grid-template-columns:1fr}}
+.mfoot{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+
+#toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+  background:var(--navy);color:#fff;padding:11px 22px;border-radius:999px;font-weight:700;
+  opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:99;box-shadow:var(--shadow);
+  max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%)}
+@media (prefers-reduced-motion: reduce){#toast{transition:none}}
+</style>
+
+<header>
+  <div class="logo">
+    <svg width="34" height="30" viewBox="0 0 34 30" aria-hidden="true">
+      <path d="M17 2 L27 15 H22.5 L17 8 L11.5 15 H7 Z" fill="#E8611F"/>
+      <path d="M17 11 L30 28 H4 Z" fill="none" stroke="#fff" stroke-width="2.4"/>
+    </svg>
+    <div>
+      <div class="word">DeltaCapital<span> · Ruben's Funding Desk</span></div>
+      <div class="sub">Ruben Davis — Funding Specialist</div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn btn-chrome btn-sm" id="settingsBtn">⚙ Settings</button>
+  <button class="btn btn-orange" id="copyLinkBtn">Copy My App Link</button>
+</header>
+
+<div class="stats" id="stats"></div>
+
+<nav class="tabs" role="tablist" id="tabs">
+  <button class="tab" role="tab" data-view="board" aria-selected="true">Board</button>
+  <button class="tab" role="tab" data-view="today" aria-selected="false">Today</button>
+  <button class="tab" role="tab" data-view="templates" aria-selected="false">Templates</button>
+  <button class="tab" role="tab" data-view="playbook" aria-selected="false">Playbook</button>
+</nav>
+
+<main id="main"></main>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Deal detail"></aside>
+
+<div class="modal" id="leadModal">
+  <div class="mcard">
+    <h2 id="modalTitle">New Lead</h2>
+    <form id="leadForm">
+      <div class="mgrid">
+        <div class="full"><label>Business name *</label><input name="biz" required></div>
+        <div><label>Owner first name</label><input name="first"></div>
+        <div><label>Owner last name</label><input name="last"></div>
+        <div><label>Phone</label><input name="phone" type="tel" placeholder="5551234567"></div>
+        <div><label>Email</label><input name="email" type="email"></div>
+        <div><label>Monthly revenue ($)</label><input name="revenue" type="number" min="0" step="1000"></div>
+        <div><label>Amount wanted ($)</label><input name="requested" type="number" min="0" step="5000"></div>
+        <div><label>Industry</label><input name="industry" placeholder="Construction, Trucking…"></div>
+        <div><label>Source</label><input name="source" placeholder="Cold call, referral…"></div>
+        <div><label>Stage</label><select name="stage" id="stageSelect"></select></div>
+        <div><label>Next follow-up</label><input name="nextFu" type="date"></div>
+      </div>
+      <div class="mfoot">
+        <button type="button" class="btn btn-ghost" id="cancelLead">Cancel</button>
+        <button type="submit" class="btn btn-orange" id="saveLead">Save Lead</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="setModal">
+  <div class="mcard">
+    <h2>Settings</h2>
+    <form id="setForm">
+      <div class="mgrid">
+        <div><label>Your name</label><input name="rep"></div>
+        <div><label>Direct phone</label><input name="myphone" placeholder="(555) 123-4567"></div>
+        <div class="full"><label>Application link</label><input name="link"></div>
+      </div>
+      <div class="mfoot">
+        <button type="button" class="btn btn-ghost" data-close="setModal">Cancel</button>
+        <button type="submit" class="btn btn-orange">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast" role="status"></div>
+<input type="file" id="csvFile" accept=".csv" hidden>
+
+<script>
+'use strict';
+/* ================= data ================= */
+const STAGES=[
+ {id:'cold', label:'Cold', color:'var(--st-cold)', fu:3},
+ {id:'warm', label:'Warm', color:'var(--st-warm)', fu:1},
+ {id:'app',  label:'Application', color:'var(--st-app)', fu:1},
+ {id:'appr', label:'Approved', color:'var(--st-appr)', fu:1},
+ {id:'con',  label:'Contracts', color:'var(--st-con)', fu:1},
+ {id:'fund', label:'Funded', color:'var(--st-fund)', fu:30},
+ {id:'dec',  label:'Declined', color:'var(--st-dec)', fu:45},
+];
+const stageById=id=>STAGES.find(s=>s.id===id)||STAGES[0];
+const PIPE_STAGES=['warm','app','appr','con'];
+const KEY='rubenDesk_v1';
+
+const todayStr=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const addDays=(n)=>{const d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const uid=()=>'L'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
+const fmt$=n=>{n=Number(n)||0;return '$'+n.toLocaleString('en-US');};
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const digits=p=>String(p||'').replace(/[^\d+]/g,'');
+
+let state=load();
+function load(){
+  try{const raw=localStorage.getItem(KEY);if(raw)return JSON.parse(raw);}catch(e){}
+  return {leads:seed(),settings:{rep:'Ruben Davis',myphone:'',link:'https://deltacapitalgroup.com/ruben/'},view:'board',personalizeId:''};
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+function seed(){
+  const t=todayStr();
+  return [
+   {id:uid(),biz:'Riverside Diner (sample)',first:'Maria',last:'Lopez',phone:'5555550111',email:'maria@example.com',revenue:42000,requested:60000,industry:'Restaurant',source:'Cold call',stage:'cold',created:t,lastTouch:'',nextFu:t,notes:[{ts:t,text:'Sample lead — tap ⋯ Edit or Delete, then add your real pipeline.'}]},
+   {id:uid(),biz:'Apex Roofing LLC (sample)',first:'Dan',last:'Whitfield',phone:'5555550122',email:'dan@example.com',revenue:88000,requested:150000,industry:'Construction',source:'Cold call',stage:'warm',created:t,lastTouch:t,nextFu:t,notes:[{ts:t,text:'Wants $150K for a second crew. Send hook email + app link.'}]},
+   {id:uid(),biz:'GoldLine Trucking (sample)',first:'Sam',last:'Okafor',phone:'5555550133',email:'sam@example.com',revenue:120000,requested:250000,industry:'Trucking',source:'Referral',stage:'app',created:t,lastTouch:t,nextFu:addDays(1),notes:[{ts:t,text:'App in, waiting on 3rd bank statement.'}]},
+   {id:uid(),biz:'Bella Salon Group (sample)',first:'Nina',last:'Park',phone:'5555550144',email:'nina@example.com',revenue:35000,requested:50000,industry:'Beauty',source:'Cold call',stage:'appr',created:t,lastTouch:t,nextFu:t,notes:[{ts:t,text:'Approved $48K — call before 5pm to lock the offer.'}]},
+  ];
+}
+
+/* ================= merge + templates ================= */
+function mergeFields(text,lead){
+  const s=state.settings;
+  const map={
+    first:lead?(lead.first||lead.biz):'[First name]',
+    owner:lead?((lead.first||'')+' '+(lead.last||'')).trim()||'[Owner]':'[Owner]',
+    biz:lead?lead.biz:'[Business name]',
+    amount:lead&&lead.requested?fmt$(lead.requested):'[Amount]',
+    revenue:lead&&lead.revenue?fmt$(lead.revenue):'[Monthly revenue]',
+    link:s.link,rep:s.rep,myphone:s.myphone||'(my direct line)',
+  };
+  return text.replace(/\{\{(\w+)\}\}/g,(m,k)=>map[k]!==undefined?map[k]:m);
+}
+
+const EMAILS=[
+ {name:'The Hook — first email',use:'Cold list / after a voicemail',
+  subj:'Working capital for {{biz}} — up to $5,000,000, no hard pull',
+  body:`Hi {{first}},
+
+Ruben Davis here with Delta Capital Group — we're a direct funder, and I help business owners get $5,000 to $5,000,000 in unsecured working capital.
+
+Why owners work with us:
+  •  Approval within 24 hours — 95% of approved files are funded within 48
+  •  No collateral, and seeing your offer takes NO hard credit pull
+  •  Rates start as low as 1% per month for well-qualified files
+  •  One-page application + your last 3 bank statements. That's it.
+
+See what {{biz}} qualifies for here (about 5 minutes):
+{{link}}
+
+Or just reply with a good time and I'll call you.
+
+{{rep}}
+Funding Specialist · Delta Capital Group
+{{myphone}}
+{{link}}`},
+ {name:'After a good call',use:'Warm — send within 10 minutes of hanging up',
+  subj:'{{biz}} — here\'s what I can put on the table',
+  body:`Hi {{first}},
+
+Great speaking with you just now. Based on what you told me, here's the lane for {{biz}}:
+
+  •  Target amount: {{amount}} in unsecured working capital
+  •  Offer back within 24 hours of your application
+  •  No collateral, no hard credit pull to see your numbers
+  •  Direct funder — I personally walk your file from application to wire
+
+Next step takes about 5 minutes:
+{{link}}
+
+The moment it's in, I hand-carry it to underwriting. Call or text me anytime.
+
+{{rep}}
+Funding Specialist · Delta Capital Group
+{{myphone}}`},
+ {name:'Application nudge',use:'App stage — started but not finished / no statements yet',
+  subj:'{{first}}, you\'re 5 minutes from an offer',
+  body:`Hi {{first}},
+
+Your file for {{biz}} is sitting one step from underwriting. Once I have the application and your last 3 bank statements, you'll see your offer within 24 hours.
+
+Finish here: {{link}}
+
+If anything on the form is annoying, call me — I'll fill it out WITH you on the phone in five minutes.
+
+{{rep}}
+Funding Specialist · Delta Capital Group
+{{myphone}}`},
+ {name:'Offer delivered',use:'Approved — send the moment the offer is in hand',
+  subj:'APPROVED ✅ {{biz}} — your offer is in',
+  body:`{{first}} — good news.
+
+{{biz}} is approved. Here's the shape of it:
+
+  •  Amount: [OFFER AMOUNT]
+  •  Term: [TERM]
+  •  Payment: [PAYMENT]
+
+Two things to know:
+  1.  Offers get re-priced by underwriting after about 72 hours, so let's lock this in.
+  2.  If the numbers aren't quite right, I can often restructure — tell me what payment works and I'll fight for it.
+
+Call or text me today: {{myphone}}
+
+{{rep}}
+Funding Specialist · Delta Capital Group`},
+ {name:'Contracts out',use:'Contracts stage — docs sent, chasing signature + stips',
+  subj:'Contracts for {{biz}} — sign today, funds as soon as tomorrow',
+  body:`Hi {{first}},
+
+Contracts for {{biz}} are in your inbox. To get you wired, I need back:
+
+  •  Signed agreement (e-sign, 2 minutes)
+  •  Driver's license — front and back
+  •  Voided business check
+  •  Most recent bank statement
+
+The moment those land, I move you straight to funding — most wires hit within 24 hours of signed contracts.
+
+Stuck on anything? Call me and we'll knock it out together: {{myphone}}
+
+{{rep}}
+Funding Specialist · Delta Capital Group`},
+ {name:'Declined — leave the door open',use:'Declined — send same day, sets up the revival',
+  subj:'{{biz}} — declined today is not declined forever',
+  body:`Hi {{first}},
+
+Straight answer: underwriting passed on {{biz}} today. I know that's not what you wanted to hear, so here's what actually flips a file like yours:
+
+  •  2–3 more months of consistent deposits
+  •  Fewer negative-balance days on the account
+  •  Paying down an existing advance below ~50%
+
+I've set a reminder to re-run you in 45 days — no hard pull, no new paperwork if nothing changed. If revenue jumps sooner, call me and I'll run it same day.
+
+{{rep}}
+Funding Specialist · Delta Capital Group
+{{myphone}}`},
+ {name:'Funded — congrats + renewal seed',use:'Funded — day of wire',
+  subj:'Congrats {{first}} — funds are on the way 🎉',
+  body:`{{first}} — the wire for {{biz}} is out. Congratulations, and thank you for trusting me with it.
+
+One heads-up worth money: once you're roughly 50% paid down, you unlock RENEWAL pricing — typically more capital at a better rate than round one. I track it on my end and I'll reach out the week you qualify.
+
+Until then: keep deposits steady, avoid negative days, and if anything comes up — payroll crunch, equipment deal, tax bill — call me first.
+
+{{rep}}
+Funding Specialist · Delta Capital Group
+{{myphone}}
+{{link}}`},
+];
+
+const TEXTS=[
+ {name:'Missed call intro',use:'Right after a no-answer dial',
+  body:`Hi {{first}}, Ruben w/ Delta Capital Group — just tried you about working capital for {{biz}}. Direct funder, $5K–$5M unsecured, no hard pull. 5-min app: {{link}} — or text me a good time to call.`},
+ {name:'Voicemail follow-up',use:'Pairs with a voicemail drop',
+  body:`Left you a quick VM {{first}}. Short version: I get business owners approved in 24 hrs for up to $5M, unsecured, no hard credit pull. Worth 3 minutes? — Ruben, Delta Capital`},
+ {name:'The link text',use:'ON the call — send while they\'re still on the phone',
+  body:`{{first}}, here's that application for {{biz}}: {{link}} — one page, no hard pull, offer in 24 hrs. Text me when it's in and I'll walk it straight to underwriting. — Ruben`},
+ {name:'App nudge',use:'App stage, day after',
+  body:`{{first}} — your file for {{biz}} is one step from an offer. 3 minutes to finish: {{link}} Want me to knock it out with you over the phone? — Ruben, Delta Capital`},
+ {name:'Offer — call me today',use:'Approved',
+  body:`Good news {{first}} — {{biz}} is APPROVED ✅ Call me before 5 so I can lock your offer before underwriting re-prices it: {{myphone}} — Ruben, Delta Capital`},
+ {name:'Contracts chase',use:'Contracts stage',
+  body:`{{first}}, contracts for {{biz}} are in your inbox. Sign + send stips today = wire as soon as tomorrow. Stuck on anything? Text me right here. — Ruben`},
+ {name:'Revival',use:'Declined / gone-cold leads, 45+ days',
+  body:`{{first}}, Ruben @ Delta Capital. It's been a few weeks since we looked at {{biz}} — how are deposits trending? I can re-run you for an offer with no hard pull. — Ruben`},
+ {name:'Renewal check-in',use:'Funded, ~50% paid down',
+  body:`{{first}}! You're about halfway through your balance at {{biz}} — that unlocks renewal money at better pricing. Want me to pull your offer? Takes a day. — Ruben, Delta Capital`},
+];
+
+const SCHEDULE=[
+ {t:'8:30–9:00',w:'Load the day',d:'Open this board. Work the red chips first: every overdue follow-up gets a plan. Load today\'s cold list into the Vonage dialer.'},
+ {t:'9:00–10:30',w:'Power Hour 1 — parallel dialer',d:'Fresh cold list. Owners answer early. Script is in the Playbook — goal: qualify + text the app link WHILE on the phone. Log every real conversation here.'},
+ {t:'10:30–11:00',w:'Text blast 1 (Nextiva)',d:'"Missed call intro" to every no-answer from block 1. "App nudge" to yesterday\'s warm leads. Templates tab → copy → paste.'},
+ {t:'11:00–12:30',w:'Power Hour 2 — dialer',d:'Callbacks from texts + rest of cold list. Anyone who engaged this morning gets a live call, not a text.'},
+ {t:'12:30–1:00',w:'Email block (Gmail)',d:'"After a good call" to every conversation from this morning. "The Hook" to good leads you couldn\'t reach twice.'},
+ {t:'1:00–1:30',w:'Lunch — replies only',d:'Eat. Answer inbound texts. No new outreach; don\'t burn fresh leads during owners\' lunch rush.'},
+ {t:'1:30–3:00',w:'Power Hour 3 — money calls',d:'Pipeline, not cold: chase applications for statements, deliver offers, restructure pushback. This block pays your commission.'},
+ {t:'3:00–3:30',w:'Text blast 2',d:'"Offer — call me today" to every approval. "Contracts chase" to unsigned docs. Second "missed call" text to morning no-answers.'},
+ {t:'3:30–5:00',w:'Closing block',d:'Signed contracts + stips ONLY. Underwriting and funding desks close — anything signed by ~4:30 can fund tomorrow. Get wet ink.'},
+ {t:'5:00–5:30',w:'Wrap + tomorrow',d:'Every card touched today gets a note + next follow-up date. Export CSV backup Fridays. Build tomorrow\'s dial list before you stand up.'},
+];
+
+/* ================= rendering ================= */
+const $=s=>document.querySelector(s);
+const main=$('#main');
+
+function counts(){
+  const t=todayStr();
+  const active=state.leads.filter(l=>l.stage!=='fund'&&l.stage!=='dec');
+  const pipe=state.leads.filter(l=>PIPE_STAGES.includes(l.stage)).reduce((a,l)=>a+(Number(l.requested)||0),0);
+  const funded=state.leads.filter(l=>l.stage==='fund').reduce((a,l)=>a+(Number(l.requested)||0),0);
+  const due=state.leads.filter(l=>l.nextFu&&l.nextFu<=t&&l.stage!=='fund').length;
+  return {active:active.length,pipe,funded,due};
+}
+function renderStats(){
+  const c=counts();
+  $('#stats').innerHTML=
+   `<div class="stat"><div class="k">Active leads</div><div class="v">${c.active}</div></div>
+    <div class="stat"><div class="k">Pipeline (warm→contracts)</div><div class="v money">${fmt$(c.pipe)}</div></div>
+    <div class="stat"><div class="k">Funded</div><div class="v money" style="color:var(--ok)">${fmt$(c.funded)}</div></div>
+    <div class="stat${c.due?' due':''}"><div class="k">Follow-ups due</div><div class="v">${c.due}</div></div>`;
+}
+
+function fuChip(l){
+  if(!l.nextFu)return '<span class="chip later">no date</span>';
+  const t=todayStr();
+  if(l.nextFu<t)return '<span class="chip overdue">overdue '+esc(l.nextFu.slice(5))+'</span>';
+  if(l.nextFu===t)return '<span class="chip today">due today</span>';
+  return '<span class="chip later">'+esc(l.nextFu.slice(5))+'</span>';
+}
+
+function render(){
+  renderStats();
+  document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.view===state.view)));
+  if(state.view==='board')renderBoard();
+  else if(state.view==='today')renderToday();
+  else if(state.view==='templates')renderTemplates();
+  else renderPlaybook();
+  save();
+}
+
+/* ---- board ---- */
+let boardQuery='';
+function renderBoard(){
+  const q=boardQuery.trim().toLowerCase();
+  const match=l=>!q||[l.biz,l.first,l.last,l.phone,l.industry].join(' ').toLowerCase().includes(q);
+  main.innerHTML=`
+   <div class="toolbar">
+     <button class="btn btn-orange" id="newLead">+ New Lead</button>
+     <input type="search" id="boardSearch" placeholder="Search name, phone, industry…" value="${esc(boardQuery)}">
+     <span class="spacer"></span>
+     <button class="btn btn-ghost btn-sm" id="exportCsv">Export CSV</button>
+     <button class="btn btn-ghost btn-sm" id="importCsv">Import CSV</button>
+   </div>
+   <div class="board" id="board">
+    ${STAGES.map(s=>{
+      const leads=state.leads.filter(l=>l.stage===s.id&&match(l));
+      const sum=leads.reduce((a,l)=>a+(Number(l.requested)||0),0);
+      return `<div class="col" data-stage="${s.id}">
+        <h3><span class="dot" style="background:${s.color}"></span>${s.label}
+          <span class="n">${leads.length}${sum?` <span class="sum">· ${fmt$(sum)}</span>`:''}</span></h3>
+        <div class="cards">
+          ${leads.map(l=>cardHtml(l,s)).join('')||'<div class="empty">Drop deals here</div>'}
+        </div>
+      </div>`;}).join('')}
+   </div>`;
+  $('#newLead').onclick=()=>openLeadModal();
+  $('#exportCsv').onclick=exportCsv;
+  $('#importCsv').onclick=()=>$('#csvFile').click();
+  const si=$('#boardSearch');
+  si.oninput=()=>{boardQuery=si.value;const pos=si.selectionStart;renderBoard();const s2=$('#boardSearch');s2.focus();s2.setSelectionRange(pos,pos);};
+  // dnd
+  document.querySelectorAll('.col').forEach(col=>{
+    col.addEventListener('dragover',e=>{e.preventDefault();col.classList.add('dragover');});
+    col.addEventListener('dragleave',()=>col.classList.remove('dragover'));
+    col.addEventListener('drop',e=>{
+      e.preventDefault();col.classList.remove('dragover');
+      const id=e.dataTransfer.getData('text/plain');
+      if(id)moveStage(id,col.dataset.stage);
+    });
+  });
+  document.querySelectorAll('.cardl').forEach(c=>{
+    c.addEventListener('dragstart',e=>e.dataTransfer.setData('text/plain',c.dataset.id));
+    c.addEventListener('click',e=>{if(e.target.closest('a'))return;openDrawer(c.dataset.id);});
+  });
+}
+function cardHtml(l,s){
+  const ph=digits(l.phone);
+  return `<div class="cardl" draggable="true" data-id="${l.id}" style="border-left-color:${s.color}">
+    <div class="biz">${esc(l.biz)}</div>
+    <div class="who">${esc(((l.first||'')+' '+(l.last||'')).trim())}${l.industry?' · '+esc(l.industry):''}</div>
+    <div class="amts">
+      <div><span class="lbl">Wants</span><b class="money">${fmt$(l.requested)}</b></div>
+      <div><span class="lbl">Rev/mo</span><b class="money">${fmt$(l.revenue)}</b></div>
+    </div>
+    <div class="foot">${fuChip(l)}
+      ${ph?`<a class="iconb" href="tel:${ph}" title="Call" aria-label="Call">✆</a>
+      <a class="iconb" href="sms:${ph}" title="Text" aria-label="Text">✉</a>`:''}
+    </div>
+  </div>`;
+}
+function moveStage(id,stage){
+  const l=state.leads.find(x=>x.id===id);if(!l||l.stage===stage)return;
+  const from=stageById(l.stage).label,to=stageById(stage);
+  l.stage=stage;
+  l.notes.unshift({ts:todayStr(),text:'Moved '+from+' → '+to.label});
+  if(!l.nextFu||l.nextFu<todayStr())l.nextFu=addDays(to.fu);
+  toast(esc(l.biz)+' → '+to.label);
+  render();
+  if(drawerId===id)openDrawer(id);
+}
+
+/* ---- today ---- */
+function renderToday(){
+  const t=todayStr();
+  const due=state.leads.filter(l=>l.nextFu&&l.nextFu<=t&&l.stage!=='fund')
+    .sort((a,b)=>(a.nextFu||'').localeCompare(b.nextFu||'')||stageRank(b)-stageRank(a));
+  main.innerHTML=`<div class="grid2">
+    <section class="panel">
+      <h2>The Battle Plan</h2>
+      <div class="sub">Built around your Vonage parallel dialer (100–200 dials), Nextiva texting, and Gmail.</div>
+      ${SCHEDULE.map(b=>`<div class="block"><div class="t">${b.t}</div><div><div class="w">${b.w}</div><div class="d">${b.d}</div></div></div>`).join('')}
+    </section>
+    <section class="panel">
+      <h2>Follow-up Queue — ${due.length} due</h2>
+      <div class="sub">Everything due or overdue. "✓" logs the touch and auto-sets the next date by stage.</div>
+      ${due.map(l=>{const s=stageById(l.stage);const ph=digits(l.phone);
+        return `<div class="qrow">
+          <div class="info" data-open="${l.id}">
+            <div class="biz">${esc(l.biz)} ${l.nextFu<t?'<span class="chip overdue">overdue</span>':''}</div>
+            <div class="meta">${esc((l.first||'')+' '+(l.last||''))} · wants <span class="money">${fmt$(l.requested)}</span></div>
+          </div>
+          <span class="stagechip" style="background:${s.color}">${s.label}</span>
+          ${ph?`<a class="iconb" href="tel:${ph}" title="Call">✆</a><a class="iconb" href="sms:${ph}" title="Text">✉</a>`:''}
+          <button class="btn btn-ghost btn-sm" data-touch="${l.id}" title="Mark touched">✓</button>
+        </div>`;}).join('')||'<div class="empty">Queue is clear. Go build it — hit the dialer. 🔥</div>'}
+    </section>
+  </div>`;
+  main.querySelectorAll('[data-open]').forEach(el=>el.onclick=()=>openDrawer(el.dataset.open));
+  main.querySelectorAll('[data-touch]').forEach(el=>el.onclick=()=>logTouch(el.dataset.touch));
+}
+function stageRank(l){return STAGES.findIndex(s=>s.id===l.stage);}
+function logTouch(id){
+  const l=state.leads.find(x=>x.id===id);if(!l)return;
+  const s=stageById(l.stage);
+  l.lastTouch=todayStr();l.nextFu=addDays(s.fu);
+  l.notes.unshift({ts:todayStr(),text:'Touched — next follow-up '+l.nextFu});
+  toast('Logged. Next: '+l.nextFu);render();
+  if(drawerId===id)openDrawer(id);
+}
+
+/* ---- templates ---- */
+function renderTemplates(){
+  const lead=state.leads.find(l=>l.id===state.personalizeId)||null;
+  main.innerHTML=`
+   <div class="pickbar">
+     <label style="margin:0">Personalize for</label>
+     <select id="pickLead">
+       <option value="">— generic (placeholders) —</option>
+       ${state.leads.map(l=>`<option value="${l.id}"${l.id===state.personalizeId?' selected':''}>${esc(l.biz)} — ${esc(l.first||'')}</option>`).join('')}
+     </select>
+     <span class="spacer"></span>
+     <button class="btn btn-ghost btn-sm" id="copyMyLink2">Copy app link</button>
+   </div>
+   <div class="tgrid">
+     <section>
+       <h2 style="color:inherit;font-size:17px;margin:0 0 10px">📧 Emails — Gmail</h2>
+       ${EMAILS.map((tpl,i)=>{
+         const subj=mergeFields(tpl.subj,lead),body=mergeFields(tpl.body,lead);
+         return `<div class="tpl">
+           <div class="name">${esc(tpl.name)} <span class="use">· ${esc(tpl.use)}</span></div>
+           <div class="subj"><b>Subject:</b> ${esc(subj)}</div>
+           <pre>${esc(body)}</pre>
+           <div class="row">
+             <button class="btn btn-orange btn-sm" data-copy="e${i}">Copy body</button>
+             <button class="btn btn-ghost btn-sm" data-copysub="e${i}">Copy subject</button>
+             ${lead&&lead.email?`<a class="btn btn-ghost btn-sm" href="mailto:${encodeURIComponent(lead.email)}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}">Open in Gmail</a>`:''}
+           </div>
+         </div>`;}).join('')}
+     </section>
+     <section>
+       <h2 style="color:inherit;font-size:17px;margin:0 0 10px">💬 Texts — Nextiva</h2>
+       ${TEXTS.map((tpl,i)=>{
+         const body=mergeFields(tpl.body,lead);
+         return `<div class="tpl">
+           <div class="name">${esc(tpl.name)} <span class="use">· ${esc(tpl.use)}</span></div>
+           <pre>${esc(body)}</pre>
+           <div class="row">
+             <button class="btn btn-orange btn-sm" data-copy="t${i}">Copy text</button>
+             ${lead&&digits(lead.phone)?`<a class="btn btn-ghost btn-sm" href="sms:${digits(lead.phone)}?&body=${encodeURIComponent(body)}">Open in Messages</a>`:''}
+           </div>
+         </div>`;}).join('')}
+     </section>
+   </div>`;
+  $('#pickLead').onchange=e=>{state.personalizeId=e.target.value;render();};
+  $('#copyMyLink2').onclick=()=>copyText(state.settings.link,'App link copied');
+  main.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>{
+    const k=b.dataset.copy;const tpl=k[0]==='e'?EMAILS[+k.slice(1)]:TEXTS[+k.slice(1)];
+    copyText(mergeFields(tpl.body,lead),'Copied — paste it in '+(k[0]==='e'?'Gmail':'Nextiva'));
+  });
+  main.querySelectorAll('[data-copysub]').forEach(b=>b.onclick=()=>{
+    const tpl=EMAILS[+b.dataset.copysub.slice(1)];
+    copyText(mergeFields(tpl.subj,lead),'Subject copied');
+  });
+}
+
+/* ---- playbook ---- */
+function renderPlaybook(){
+  main.innerHTML=`<div class="pb">
+   <section class="panel">
+     <h2>The Numbers That Sell</h2>
+     <div class="sub">Delta Capital's real figures — say them with total confidence.</div>
+     <div class="numbers">
+       <div class="nb"><div class="v">$5K–$5M</div><div class="k">Unsecured capital</div></div>
+       <div class="nb"><div class="v">24 hrs</div><div class="k">To approval</div></div>
+       <div class="nb"><div class="v">95%</div><div class="k">Funded within 48 hrs</div></div>
+       <div class="nb"><div class="v">6 mo</div><div class="k">Min. time in business</div></div>
+       <div class="nb"><div class="v">$15K/mo</div><div class="k">Min. revenue</div></div>
+       <div class="nb"><div class="v">500</div><div class="k">Min. FICO</div></div>
+     </div>
+     <div class="notebox">⚠ <b>Before you quote "as low as 1%/month":</b> confirm the current floor with your manager and only promise pricing underwriting will actually honor. "As low as… for well-qualified files" keeps you honest; a blown quote kills the close AND the renewal.</div>
+   </section>
+
+   <section class="panel">
+     <h2>Dialer Opener — 20 seconds</h2>
+     <div class="sub">Parallel dialer means they answer before you dial. Know the first line cold.</div>
+     <div class="script">
+       <p class="cue">They pick up</p>
+       <p class="say">"Hey, is this {{first}}? … {{first}}, it's Ruben with Delta Capital — I'll be fast, I know you're running a business. We're a <b>direct funder</b> — I get owners anywhere from five grand to five million, unsecured, usually inside 48 hours. Quick question: is there anything you're putting off right now — equipment, payroll, expansion, a slow month — that capital would fix?"</p>
+       <p class="cue">If yes / maybe → qualify (below). If "not right now"</p>
+       <p class="say">"Totally fair. Let me text you my direct line and application link — costs nothing to see your number, no hard pull. When the moment comes, you'll have a guy. Fair enough?"</p>
+       <p class="cue">→ Send "Missed call intro" text. Log lead as Cold with a 3-day follow-up.</p>
+     </div>
+   </section>
+
+   <section class="panel">
+     <h2>The 4 Qualifying Questions</h2>
+     <div class="sub">All four in under a minute. Pass = 6+ months, $15K+/mo, 500+ FICO.</div>
+     <div class="script">
+       <div class="check"><span class="ck">1</span><div><b>"How long have you been in business?"</b> — need 6+ months.</div></div>
+       <div class="check"><span class="ck">2</span><div><b>"What's the business depositing monthly, roughly?"</b> — need $15K+. Deposits, not profit.</div></div>
+       <div class="check"><span class="ck">3</span><div><b>"Credit-wise — rough ballpark, no wrong answer?"</b> — need 500+. Remind them: no hard pull to see the offer.</div></div>
+       <div class="check"><span class="ck">4</span><div><b>"How much are you looking for, and what's it going to do for you?"</b> — the use of funds IS your closing story.</div></div>
+       <p class="cue">Qualified → close on the spot</p>
+       <p class="say">"Perfect — you qualify. I'm texting you my application right now while we're talking. It's one page, five minutes, no hard pull, and you'll have a real offer inside 24 hours. Open the text — I'll stay on with you."</p>
+       <p class="cue">→ Send "The link text." Move card to Warm. If the app goes in → Application.</p>
+     </div>
+   </section>
+
+   <section class="panel">
+     <h2>Objection Counters</h2>
+     <div class="script">
+       <p><b>"Not interested."</b> — <span class="say">"No problem — most of my best clients said that first. One question and I'm gone: if money were free tomorrow, what would you put it into? …That's exactly what we fund."</span></p>
+       <p><b>"What's the rate?"</b> — <span class="say">"Honest answer: it's priced per file — revenue, time in business, credit. Well-qualified files start as low as 1% a month. The only way to get YOUR real number is the 5-minute app — no hard pull, no obligation. Want your number or a guess?"</span></p>
+       <p><b>"I already have a loan / advance."</b> — <span class="say">"Perfect — that means you qualify with lenders like us. If you're past halfway, I can likely consolidate or top you up with net-new money. What's the balance looking like?"</span></p>
+       <p><b>"Send me some info."</b> — <span class="say">"Better — I'll text you my application and my direct cell right now. It's one page. What's the best number for texts?"</span> — never just email a brochure.</p>
+       <p><b>"Rates are too high."</b> — <span class="say">"Compared to what — the bank that takes 90 days and says no? Price the cost of NOT doing the project: the crew you can't hire, the truck that's down. If the math on the use of funds doesn't beat the cost of capital, I'll tell you not to take it."</span></p>
+     </div>
+   </section>
+
+   <section class="panel">
+     <h2>Follow-up Cadence (auto-set by the ✓ button)</h2>
+     <table class="cad">
+       <tr><th>Stage</th><th>Touch every</th><th>Play</th></tr>
+       <tr><td><span class="stagechip" style="background:var(--st-cold)">Cold</span></td><td>3 days</td><td>Alternate call / text. Two no-answers = hook email. 6 touches, then park 45 days.</td></tr>
+       <tr><td><span class="stagechip" style="background:var(--st-warm)">Warm</span></td><td>1 day</td><td>Goal: application in hand. Call + same-day "after a good call" email.</td></tr>
+       <tr><td><span class="stagechip" style="background:var(--st-app)">Application</span></td><td>1 day</td><td>Chase statements. Offer to fill the app on the phone. Momentum dies in 48 hrs.</td></tr>
+       <tr><td><span class="stagechip" style="background:var(--st-appr)">Approved</span></td><td>Same day</td><td>Deliver the offer LIVE by phone, never by email alone. Create urgency: offers re-price.</td></tr>
+       <tr><td><span class="stagechip" style="background:var(--st-con)">Contracts</span></td><td>Same day</td><td>Walk them through e-sign + stips on the phone. Signed by 4:30 = funds tomorrow.</td></tr>
+       <tr><td><span class="stagechip" style="background:var(--st-fund)">Funded</span></td><td>30 days</td><td>Check-in call. At ~50% paid down → renewal offer. This is free money — never skip it.</td></tr>
+       <tr><td><span class="stagechip" style="background:var(--st-dec)">Declined</span></td><td>45 days</td><td>Revival text → re-run the file. Declines are next quarter's fundings.</td></tr>
+     </table>
+   </section>
+
+   <section class="panel">
+     <h2>The Renewal Play</h2>
+     <div class="script">
+       <p class="say">Your funded column is a <b>book of business</b>, not a trophy shelf. Every funded merchant at ~50% paid down qualifies for renewal — usually more money, better pricing, zero cold-calling. One renewal a week is a quota-maker. The 30-day funded cadence exists to keep you the FIRST call when they need capital again — because every other shop is dialing your funded clients right now.</p>
+     </div>
+   </section>
+  </div>`;
+}
+
+/* ================= drawer ================= */
+let drawerId=null;
+function openDrawer(id){
+  const l=state.leads.find(x=>x.id===id);if(!l)return;
+  drawerId=id;
+  const s=stageById(l.stage);const ph=digits(l.phone);
+  $('#drawer').innerHTML=`
+   <div class="dh">
+     <div class="biz">${esc(l.biz)}</div>
+     <div class="row">
+       <span class="stagechip" style="background:${s.color}">${s.label}</span>
+       <select id="dStage" aria-label="Stage">${STAGES.map(x=>`<option value="${x.id}"${x.id===l.stage?' selected':''}>${x.label}</option>`).join('')}</select>
+       <span class="spacer"></span>
+       <button class="btn btn-chrome btn-sm" id="dClose">✕</button>
+     </div>
+   </div>
+   <div class="body">
+     <div class="fgrid">
+       <div class="f"><label>Owner</label><div class="lv">${esc(((l.first||'')+' '+(l.last||'')).trim())||'—'}</div></div>
+       <div class="f"><label>Industry</label><div class="lv">${esc(l.industry)||'—'}</div></div>
+       <div class="f"><label>Phone</label><div class="lv">${ph?`<a href="tel:${ph}">${esc(l.phone)}</a>`:'—'}</div></div>
+       <div class="f"><label>Email</label><div class="lv">${l.email?`<a href="mailto:${esc(l.email)}">${esc(l.email)}</a>`:'—'}</div></div>
+       <div class="f"><label>Wants</label><div class="lv money">${fmt$(l.requested)}</div></div>
+       <div class="f"><label>Revenue / mo</label><div class="lv money">${fmt$(l.revenue)}</div></div>
+       <div class="f"><label>Source</label><div class="lv">${esc(l.source)||'—'}</div></div>
+       <div class="f"><label>Last touch</label><div class="lv">${esc(l.lastTouch)||'never'}</div></div>
+       <div class="f"><label>Next follow-up</label><input type="date" id="dFu" value="${esc(l.nextFu||'')}"></div>
+     </div>
+     <div class="acts">
+       ${ph?`<a class="btn btn-orange btn-sm" href="tel:${ph}">✆ Call</a>`:''}
+       <button class="btn btn-ghost btn-sm" id="dText">💬 Text scripts</button>
+       <button class="btn btn-ghost btn-sm" id="dEmail">📧 Email scripts</button>
+       <button class="btn btn-ghost btn-sm" id="dLink">🔗 Copy app link</button>
+       <button class="btn btn-ghost btn-sm" id="dTouch">✓ Log touch</button>
+     </div>
+     <div class="notes">
+       <h4>Notes</h4>
+       <div class="addnote"><input id="dNote" placeholder="Add a note — call result, promise, stip…"><button class="btn btn-orange btn-sm" id="dAddNote">Add</button></div>
+       ${l.notes.map(n=>`<div class="note"><span class="ts">${esc(n.ts)}</span><br>${esc(n.text)}</div>`).join('')||'<div class="empty">No notes yet</div>'}
+     </div>
+   </div>
+   <div class="df">
+     <button class="btn btn-ghost btn-sm" id="dEdit">Edit</button>
+     <button class="btn btn-danger btn-sm" id="dDelete">Delete</button>
+     <span class="spacer"></span>
+     <button class="btn btn-ghost btn-sm" id="dClose2">Close</button>
+   </div>`;
+  $('#drawer').classList.add('open');$('#scrim').classList.add('open');
+  $('#dClose').onclick=$('#dClose2').onclick=closeDrawer;
+  $('#dStage').onchange=e=>moveStage(id,e.target.value);
+  $('#dFu').onchange=e=>{l.nextFu=e.target.value;save();renderStats();toast('Follow-up set: '+(l.nextFu||'none'));};
+  $('#dTouch').onclick=()=>logTouch(id);
+  $('#dLink').onclick=()=>copyText(state.settings.link,'App link copied — send it!');
+  $('#dText').onclick=()=>{state.personalizeId=id;state.view='templates';closeDrawer();render();};
+  $('#dEmail').onclick=()=>{state.personalizeId=id;state.view='templates';closeDrawer();render();};
+  $('#dAddNote').onclick=()=>{
+    const v=$('#dNote').value.trim();if(!v)return;
+    l.notes.unshift({ts:todayStr(),text:v});l.lastTouch=todayStr();save();openDrawer(id);
+  };
+  $('#dNote').addEventListener('keydown',e=>{if(e.key==='Enter')$('#dAddNote').click();});
+  $('#dEdit').onclick=()=>openLeadModal(l);
+  $('#dDelete').onclick=()=>{
+    if(!confirm('Delete '+l.biz+'? This can\'t be undone.'))return;
+    state.leads=state.leads.filter(x=>x.id!==id);closeDrawer();toast('Deleted');render();
+  };
+}
+function closeDrawer(){drawerId=null;$('#drawer').classList.remove('open');$('#scrim').classList.remove('open');}
+$('#scrim').onclick=closeDrawer;
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();closeModals();}});
+
+/* ================= lead modal ================= */
+let editingId=null;
+function openLeadModal(lead){
+  editingId=lead?lead.id:null;
+  $('#modalTitle').textContent=lead?'Edit Lead':'New Lead';
+  $('#stageSelect').innerHTML=STAGES.map(s=>`<option value="${s.id}">${s.label}</option>`).join('');
+  const f=$('#leadForm');
+  f.reset();
+  if(lead){
+    for(const k of ['biz','first','last','phone','email','revenue','requested','industry','source','stage','nextFu'])
+      if(f.elements[k])f.elements[k].value=lead[k]??'';
+  }else{
+    f.elements.stage.value='cold';f.elements.nextFu.value=todayStr();
+  }
+  $('#leadModal').classList.add('open');
+  f.elements.biz.focus();
+}
+function closeModals(){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('open'));}
+$('#cancelLead').onclick=closeModals;
+$('#leadModal').addEventListener('click',e=>{if(e.target.id==='leadModal')closeModals();});
+$('#leadForm').onsubmit=e=>{
+  e.preventDefault();
+  const f=e.target,g=k=>f.elements[k].value.trim();
+  const data={biz:g('biz'),first:g('first'),last:g('last'),phone:g('phone'),email:g('email'),
+    revenue:Number(g('revenue'))||0,requested:Number(g('requested'))||0,
+    industry:g('industry'),source:g('source'),stage:f.elements.stage.value,nextFu:f.elements.nextFu.value};
+  if(editingId){
+    const l=state.leads.find(x=>x.id===editingId);Object.assign(l,data);
+    toast('Saved');closeModals();render();if(drawerId===editingId)openDrawer(editingId);
+  }else{
+    state.leads.unshift(Object.assign({id:uid(),created:todayStr(),lastTouch:'',notes:[]},data));
+    toast('Lead added — go get ’em');closeModals();state.view='board';render();
+  }
+};
+
+/* ================= settings ================= */
+$('#settingsBtn').onclick=()=>{
+  const f=$('#setForm');
+  f.elements.rep.value=state.settings.rep;
+  f.elements.myphone.value=state.settings.myphone;
+  f.elements.link.value=state.settings.link;
+  $('#setModal').classList.add('open');
+};
+$('#setModal').addEventListener('click',e=>{if(e.target.id==='setModal')closeModals();});
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeModals);
+$('#setForm').onsubmit=e=>{
+  e.preventDefault();const f=e.target;
+  state.settings.rep=f.elements.rep.value.trim()||'Ruben Davis';
+  state.settings.myphone=f.elements.myphone.value.trim();
+  state.settings.link=f.elements.link.value.trim()||'https://deltacapitalgroup.com/ruben/';
+  closeModals();toast('Settings saved');render();
+};
+
+/* ================= csv ================= */
+const CSV_HEADERS=['business','owner_first','owner_last','phone','email','revenue','requested','industry','source','stage','created','last_touch','next_followup','notes'];
+function exportCsv(){
+  const rows=[CSV_HEADERS.join(',')];
+  for(const l of state.leads){
+    const vals=[l.biz,l.first,l.last,l.phone,l.email,l.revenue,l.requested,l.industry,l.source,
+      stageById(l.stage).label,l.created,l.lastTouch,l.nextFu,(l.notes||[]).map(n=>n.ts+': '+n.text).join(' | ')];
+    rows.push(vals.map(v=>{v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(','));
+  }
+  const blob=new Blob([rows.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='funding-desk-'+todayStr()+'.csv';a.click();URL.revokeObjectURL(a.href);
+  toast('CSV downloaded — import to Google Sheets');
+}
+$('#csvFile').addEventListener('change',e=>{
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const rows=parseCsv(String(reader.result));
+      if(rows.length<2){toast('No rows found');return;}
+      const hdr=rows[0].map(h=>h.toLowerCase().trim());
+      const col=name=>hdr.findIndex(h=>h.includes(name));
+      const ci={biz:col('business'),first:col('first'),last:col('last'),phone:col('phone'),email:col('email'),
+        revenue:col('revenue'),requested:Math.max(col('requested'),col('amount')),industry:col('industry'),
+        source:col('source'),stage:col('stage'),nextFu:col('follow')};
+      if(ci.biz<0){toast('Need a "business" column');return;}
+      let n=0;
+      for(let i=1;i<rows.length;i++){
+        const r=rows[i];if(!r[ci.biz])continue;
+        const stRaw=(ci.stage>=0?r[ci.stage]:'').toLowerCase();
+        const st=STAGES.find(s=>stRaw.includes(s.label.toLowerCase())||stRaw===s.id);
+        state.leads.push({id:uid(),biz:r[ci.biz],first:ci.first>=0?r[ci.first]||'':'',last:ci.last>=0?r[ci.last]||'':'',
+          phone:ci.phone>=0?r[ci.phone]||'':'',email:ci.email>=0?r[ci.email]||'':'',
+          revenue:ci.revenue>=0?Number(String(r[ci.revenue]).replace(/[^\d.]/g,''))||0:0,
+          requested:ci.requested>=0?Number(String(r[ci.requested]).replace(/[^\d.]/g,''))||0:0,
+          industry:ci.industry>=0?r[ci.industry]||'':'',source:ci.source>=0?r[ci.source]||'':'Import',
+          stage:st?st.id:'cold',created:todayStr(),lastTouch:'',
+          nextFu:ci.nextFu>=0&&r[ci.nextFu]?r[ci.nextFu]:todayStr(),notes:[{ts:todayStr(),text:'Imported from CSV'}]});
+        n++;
+      }
+      toast('Imported '+n+' leads');render();
+    }catch(err){toast('Import failed — check the file');}
+    e.target.value='';
+  };
+  reader.readAsText(file);
+});
+function parseCsv(text){
+  const rows=[];let row=[],cur='',inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(inQ){
+      if(c==='"'){if(text[i+1]==='"'){cur+='"';i++;}else inQ=false;}
+      else cur+=c;
+    }else if(c==='"')inQ=true;
+    else if(c===','){row.push(cur);cur='';}
+    else if(c==='\n'||c==='\r'){
+      if(c==='\r'&&text[i+1]==='\n')i++;
+      row.push(cur);cur='';
+      if(row.length>1||row[0]!=='')rows.push(row);
+      row=[];
+    }else cur+=c;
+  }
+  row.push(cur);
+  if(row.length>1||row[0]!=='')rows.push(row);
+  return rows;
+}
+
+/* ================= misc ================= */
+function copyText(text,msg){
+  const done=()=>toast(msg||'Copied');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done,()=>fallbackCopy(text,done));
+  }else fallbackCopy(text,done);
+}
+function fallbackCopy(text,done){
+  const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');done();}catch(e){toast('Copy failed — long-press to copy manually');}
+  document.body.removeChild(ta);
+}
+let toastTimer=null;
+function toast(msg){
+  const t=$('#toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
+}
+$('#copyLinkBtn').onclick=()=>copyText(state.settings.link,'Your app link is copied — go close');
+$('#tabs').addEventListener('click',e=>{
+  const b=e.target.closest('.tab');if(!b)return;
+  state.view=b.dataset.view;render();
+});
+
+render();
+</script>
