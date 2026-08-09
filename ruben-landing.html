@@ -188,6 +188,23 @@ footer .row{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
 footer a{color:#fff;text-decoration:none;font-weight:700}
 footer .fine{border-top:1px solid rgba(255,255,255,.14);padding-top:16px;font-size:12px;line-height:1.6}
 
+/* floating BBB badge — bottom right, persistent on scroll */
+.bbb{
+  position:fixed;right:16px;bottom:16px;z-index:35;
+  display:flex;align-items:center;gap:10px;text-decoration:none;
+  background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:9px 14px 9px 9px;box-shadow:0 10px 30px rgba(15,33,72,.22)}
+.bbb .seal{
+  background:#00548B;color:#fff;border-radius:8px;width:44px;height:44px;flex:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.bbb .seal b{font-size:15px;letter-spacing:.02em}
+.bbb .seal span{font-size:7.5px;font-weight:700;letter-spacing:.06em;margin-top:2px}
+.bbb .tx .r{font-weight:800;font-size:15px;color:var(--ink)}
+.bbb .tx .a{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.bbb:hover{transform:translateY(-2px)}
+@media (prefers-reduced-motion: reduce){.bbb:hover{transform:none}}
+@media(max-width:640px){.bbb{bottom:calc(84px + env(safe-area-inset-bottom))}}
+
 /* mobile sticky CTA */
 .mcta{
   position:fixed;left:0;right:0;bottom:0;z-index:40;display:none;
@@ -450,7 +467,7 @@ footer .fine{border-top:1px solid rgba(255,255,255,.14);padding-top:16px;font-si
       <span>·</span>
       <a href="https://deltacapitalgroup.com/ruben/">deltacapitalgroup.com/ruben</a>
     </div>
-    <div class="row">Ruben Davis, Funding Advisor · BBB Accredited Business</div>
+    <div class="row">Ruben Davis, Funding Advisor · <a href="https://www.bbb.org/us/fl/hollywood/profile/business-loans/delta-capital-group-inc-0633-92047417" target="_blank" rel="noopener">BBB Accredited Business — A+ Rating</a></div>
     <div class="fine">*Rates, amounts, and terms are subject to underwriting approval and vary by business revenue, time in business, and credit profile; not all applicants qualify for the lowest advertised pricing. Funding times measured from final approval. This page is provided by Ruben Davis, Funding Advisor with Delta Capital Group.</div>
   </div>
 </footer>
@@ -459,3 +476,9 @@ footer .fine{border-top:1px solid rgba(255,255,255,.14);padding-top:16px;font-si
   <a class="btn btn-orange" href="https://deltacapitalgroup.com/ruben/">Apply Now</a>
   <a class="btn btn-line" href="tel:3057353097">Call Ruben</a>
 </div>
+
+<a class="bbb" href="https://www.bbb.org/us/fl/hollywood/profile/business-loans/delta-capital-group-inc-0633-92047417"
+   target="_blank" rel="noopener" aria-label="Delta Capital Group — BBB Accredited Business, A+ rating. Opens BBB profile.">
+  <span class="seal"><b>BBB</b><span>ACCRED.</span></span>
+  <span class="tx"><span class="r">A+ Rating</span><br><span class="a">Accredited Business</span></span>
+</a>
