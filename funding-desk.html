@@ -3,6 +3,8 @@
 <style>
 /* ---------- Brand tokens (Delta Capital Group) ---------- */
 :root{
+  color-scheme:light;
+  --link:#1E3C6E;
   --navy:#0F2148;          /* chrome / headings */
   --navy-2:#1E3C6E;        /* icon circles, chips */
   --orange:#E8611F;        /* primary action only */
@@ -24,14 +26,20 @@
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --link:#9FB4E8;
     --ground:#0B1120; --card:#141C30; --panel:#182240;
     --ink:#E8ECF6; --muted:#9AA4BC; --line:#2A3554;
+    --ok:#4ADE80; --warn:#FBBF24; --bad:#F87171;
     --orange-soft:#3A2415; --shadow:0 10px 30px rgba(0,0,0,.45);
   }
 }
 :root[data-theme="dark"]{
+  color-scheme:dark;
+  --link:#9FB4E8;
   --ground:#0B1120; --card:#141C30; --panel:#182240;
   --ink:#E8ECF6; --muted:#9AA4BC; --line:#2A3554;
+  --ok:#4ADE80; --warn:#FBBF24; --bad:#F87171;
   --orange-soft:#3A2415; --shadow:0 10px 30px rgba(0,0,0,.45);
 }
 
@@ -44,7 +52,8 @@ body{
 }
 .money,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
 button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
-button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+a{color:var(--link)}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{
   outline:3px solid var(--orange);outline-offset:2px;border-radius:6px}
 input,select,textarea{
   font:inherit;color:var(--ink);background:var(--card);
@@ -196,7 +205,8 @@ table.cad td{padding:8px;border-bottom:1px solid var(--line)}
   position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:var(--card);
   z-index:50;box-shadow:-18px 0 50px rgba(15,33,72,.25);transform:translateX(105%);
   transition:transform .22s ease;display:flex;flex-direction:column}
-@media (prefers-reduced-motion: reduce){.drawer{transition:none}}
+.drawer:not(.open){visibility:hidden;transition:transform .22s ease, visibility 0s .22s}
+@media (prefers-reduced-motion: reduce){.drawer,.drawer:not(.open){transition:none}}
 .drawer.open{transform:none}
 .drawer .dh{background:var(--navy);color:#fff;padding:16px 18px}
 .drawer .dh .biz{font-size:19px;font-weight:800;letter-spacing:-.01em}
@@ -261,7 +271,7 @@ table.cad td{padding:8px;border-bottom:1px solid var(--line)}
 <main id="main"></main>
 
 <div class="scrim" id="scrim"></div>
-<aside class="drawer" id="drawer" aria-label="Deal detail"></aside>
+<aside class="drawer" id="drawer" aria-label="Deal detail" inert></aside>
 
 <div class="modal" id="leadModal">
   <div class="mcard">
@@ -327,6 +337,15 @@ const KEY='rubenDesk_v1';
 const todayStr=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const addDays=(n)=>{const d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const uid=()=>'L'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
+function normDate(v){
+  v=String(v==null?'':v).trim();if(!v)return '';
+  if(/^\d{4}-\d{2}-\d{2}$/.test(v))return v;
+  const m=v.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})$/);   /* US M/D/YYYY */
+  if(m){const y=m[3].length===2?'20'+m[3]:m[3];return y+'-'+m[1].padStart(2,'0')+'-'+m[2].padStart(2,'0');}
+  const d=new Date(v);
+  if(!isNaN(d.getTime()))return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  return '';
+}
 const fmt$=n=>{n=Number(n)||0;return '$'+n.toLocaleString('en-US');};
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const digits=p=>String(p||'').replace(/[^\d+]/g,'');
@@ -593,11 +612,14 @@ function renderBoard(){
   document.querySelectorAll('.cardl').forEach(c=>{
     c.addEventListener('dragstart',e=>e.dataTransfer.setData('text/plain',c.dataset.id));
     c.addEventListener('click',e=>{if(e.target.closest('a'))return;openDrawer(c.dataset.id);});
+    c.addEventListener('keydown',e=>{
+      if(e.key==='Enter'||e.key===' '){e.preventDefault();openDrawer(c.dataset.id);}
+    });
   });
 }
 function cardHtml(l,s){
   const ph=digits(l.phone);
-  return `<div class="cardl" draggable="true" data-id="${l.id}" style="border-left-color:${s.color}">
+  return `<div class="cardl" draggable="true" tabindex="0" role="button" aria-label="Open ${esc(l.biz)}" data-id="${l.id}" style="border-left-color:${s.color}">
     <div class="biz">${esc(l.biz)}</div>
     <div class="who">${esc(((l.first||'')+' '+(l.last||'')).trim())}${l.industry?' · '+esc(l.industry):''}</div>
     <div class="amts">
@@ -637,7 +659,7 @@ function renderToday(){
       <div class="sub">Everything due or overdue. "✓" logs the touch and auto-sets the next date by stage.</div>
       ${due.map(l=>{const s=stageById(l.stage);const ph=digits(l.phone);
         return `<div class="qrow">
-          <div class="info" data-open="${l.id}">
+          <div class="info" data-open="${l.id}" tabindex="0" role="button" aria-label="Open ${esc(l.biz)}">
             <div class="biz">${esc(l.biz)} ${l.nextFu<t?'<span class="chip overdue">overdue</span>':''}</div>
             <div class="meta">${esc((l.first||'')+' '+(l.last||''))} · wants <span class="money">${fmt$(l.requested)}</span></div>
           </div>
@@ -647,7 +669,12 @@ function renderToday(){
         </div>`;}).join('')||'<div class="empty">Queue is clear. Go build it — hit the dialer. 🔥</div>'}
     </section>
   </div>`;
-  main.querySelectorAll('[data-open]').forEach(el=>el.onclick=()=>openDrawer(el.dataset.open));
+  main.querySelectorAll('[data-open]').forEach(el=>{
+    el.onclick=()=>openDrawer(el.dataset.open);
+    el.addEventListener('keydown',e=>{
+      if(e.key==='Enter'||e.key===' '){e.preventDefault();openDrawer(el.dataset.open);}
+    });
+  });
   main.querySelectorAll('[data-touch]').forEach(el=>el.onclick=()=>logTouch(el.dataset.touch));
 }
 function stageRank(l){return STAGES.findIndex(s=>s.id===l.stage);}
@@ -839,6 +866,7 @@ function openDrawer(id){
      <span class="spacer"></span>
      <button class="btn btn-ghost btn-sm" id="dClose2">Close</button>
    </div>`;
+  $('#drawer').inert=false;
   $('#drawer').classList.add('open');$('#scrim').classList.add('open');
   $('#dClose').onclick=$('#dClose2').onclick=closeDrawer;
   $('#dStage').onchange=e=>moveStage(id,e.target.value);
@@ -858,7 +886,7 @@ function openDrawer(id){
     state.leads=state.leads.filter(x=>x.id!==id);closeDrawer();toast('Deleted');render();
   };
 }
-function closeDrawer(){drawerId=null;$('#drawer').classList.remove('open');$('#scrim').classList.remove('open');}
+function closeDrawer(){drawerId=null;const d=$('#drawer');d.classList.remove('open');d.inert=true;$('#scrim').classList.remove('open');}
 $('#scrim').onclick=closeDrawer;
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();closeModals();}});
 
@@ -938,25 +966,40 @@ $('#csvFile').addEventListener('change',e=>{
       if(rows.length<2){toast('No rows found');return;}
       const hdr=rows[0].map(h=>h.toLowerCase().trim());
       const col=name=>hdr.findIndex(h=>h.includes(name));
-      const ci={biz:col('business'),first:col('first'),last:col('last'),phone:col('phone'),email:col('email'),
+      const ci={biz:col('business'),first:col('first'),last:col('owner_last')>=0?col('owner_last'):col('last'),
+        phone:col('phone'),email:col('email'),
         revenue:col('revenue'),requested:Math.max(col('requested'),col('amount')),industry:col('industry'),
-        source:col('source'),stage:col('stage'),nextFu:col('follow')};
+        source:col('source'),stage:col('stage'),nextFu:col('follow'),
+        created:col('created'),lastTouch:col('touch'),notes:col('note')};
       if(ci.biz<0){toast('Need a "business" column');return;}
-      let n=0;
+      const cell=(r,i)=>String(i>=0&&r[i]!=null?r[i]:'').trim();
+      const leadKey=(biz,phone)=>biz.toLowerCase().replace(/\s+/g,' ')+'|'+digits(phone);
+      const seen=new Set(state.leads.map(l=>leadKey(String(l.biz||''),l.phone)));
+      let n=0,skipped=0;
       for(let i=1;i<rows.length;i++){
-        const r=rows[i];if(!r[ci.biz])continue;
-        const stRaw=(ci.stage>=0?r[ci.stage]:'').toLowerCase();
+        const r=rows[i];const biz=cell(r,ci.biz);if(!biz)continue;
+        const key=leadKey(biz,cell(r,ci.phone));
+        if(seen.has(key)){skipped++;continue;}
+        seen.add(key);
+        const stRaw=cell(r,ci.stage).toLowerCase();
         const st=STAGES.find(s=>stRaw.includes(s.label.toLowerCase())||stRaw===s.id);
-        state.leads.push({id:uid(),biz:r[ci.biz],first:ci.first>=0?r[ci.first]||'':'',last:ci.last>=0?r[ci.last]||'':'',
-          phone:ci.phone>=0?r[ci.phone]||'':'',email:ci.email>=0?r[ci.email]||'':'',
-          revenue:ci.revenue>=0?Number(String(r[ci.revenue]).replace(/[^\d.]/g,''))||0:0,
-          requested:ci.requested>=0?Number(String(r[ci.requested]).replace(/[^\d.]/g,''))||0:0,
-          industry:ci.industry>=0?r[ci.industry]||'':'',source:ci.source>=0?r[ci.source]||'':'Import',
-          stage:st?st.id:'cold',created:todayStr(),lastTouch:'',
-          nextFu:ci.nextFu>=0&&r[ci.nextFu]?r[ci.nextFu]:todayStr(),notes:[{ts:todayStr(),text:'Imported from CSV'}]});
+        const notesRaw=cell(r,ci.notes);
+        const notes=notesRaw
+          ?notesRaw.split(' | ').map(seg=>{const p=seg.indexOf(': ');
+             return p>0?{ts:seg.slice(0,p),text:seg.slice(p+2)}:{ts:todayStr(),text:seg};})
+          :[{ts:todayStr(),text:'Imported from CSV'}];
+        state.leads.push({id:uid(),biz,first:cell(r,ci.first),last:cell(r,ci.last),
+          phone:cell(r,ci.phone),email:cell(r,ci.email),
+          revenue:Number(cell(r,ci.revenue).replace(/[^\d.]/g,''))||0,
+          requested:Number(cell(r,ci.requested).replace(/[^\d.]/g,''))||0,
+          industry:cell(r,ci.industry),source:cell(r,ci.source)||'Import',
+          stage:st?st.id:'cold',
+          created:normDate(cell(r,ci.created))||todayStr(),
+          lastTouch:normDate(cell(r,ci.lastTouch))||'',
+          nextFu:normDate(cell(r,ci.nextFu))||todayStr(),notes});
         n++;
       }
-      toast('Imported '+n+' leads');render();
+      toast('Imported '+n+' leads'+(skipped?' · '+skipped+' duplicates skipped':''));render();
     }catch(err){toast('Import failed — check the file');}
     e.target.value='';
   };
