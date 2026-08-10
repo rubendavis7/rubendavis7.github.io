@@ -228,6 +228,37 @@ footer .fine{border-top:1px solid rgba(255,255,255,.14);padding-top:16px;font-si
   gap:10px;box-shadow:0 -8px 30px rgba(15,33,72,.15)}
 .mcta .btn{flex:1;padding:12px 10px;font-size:15px}
 @media(max-width:640px){.mcta{display:flex}body{padding-bottom:74px}}
+
+/* ---------- final pass: partner notes, tile buttons, mobile density ---------- */
+.tile li.via{color:var(--muted);font-size:12.5px;font-style:italic}
+.tile li.via::before{background:var(--muted);opacity:.5}
+.tile .go{
+  display:flex;align-items:center;justify-content:center;min-height:48px;
+  border:2px solid var(--navy-2);border-radius:999px;color:var(--navy-2);
+  font-weight:800;font-size:14.5px;text-decoration:none;padding:0 16px;margin-top:auto}
+:root[data-theme="dark"] .tile .go{border-color:#5A6FA8;color:#B9C6EA}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tile .go{border-color:#5A6FA8;color:#B9C6EA}}
+.tile .details{
+  background:none;border:none;padding:6px 0;margin:2px 0 10px;
+  font-weight:700;font-size:13.5px;color:var(--link);cursor:pointer;text-align:left;display:none}
+.tile .details::after{content:" +"}
+.tile.open .details::after{content:" –"}
+
+@media(max-width:640px){
+  .topbar .btn{display:none}
+  .mcta .mprimary{flex:3}
+  .mcta .msms{flex:1}
+}
+@media(max-width:620px){
+  section{padding:44px 0}
+  .shead{margin-bottom:26px}
+  .tile{padding:20px 20px}
+  .tile .ic{width:44px;height:44px;margin-bottom:12px}
+  .tile .details{display:block}
+  .tile p,.tile ul{display:none}
+  .tile.open p,.tile.open ul{display:block}
+  .qual .inner{padding:30px 24px}
+}
 </style>
 
 <div class="topbar">
@@ -247,7 +278,7 @@ footer .fine{border-top:1px solid rgba(255,255,255,.14);padding-top:16px;font-si
     <div>
       <span class="eyebrow">Same-Day Business Funding</span>
       <h1>Need Funds Quickly?</h1>
-      <p class="lede">Access <b>$5,000 to $5,000,000</b> in unsecured capital — with an answer in as little as <b>2 hours</b>, funded by a direct funder, not a broker chain.</p>
+      <p class="lede">Access <b>$5,000 to $5,000,000</b> in unsecured capital — with an answer in as little as <b>2 hours</b>, working capital funded directly by Delta Capital — not a broker chain.</p>
       <ul class="checks">
         <li><span class="ck">✓</span>Easy 5-minute online application</li>
         <li><span class="ck">✓</span>Soft pull only — no hard credit check to see your offer</li>
@@ -269,7 +300,7 @@ footer .fine{border-top:1px solid rgba(255,255,255,.14);padding-top:16px;font-si
         <div><div class="v num">$120M+</div><div class="k">Total funded</div></div>
         <div><div class="v num">5+</div><div class="k">Years experience</div></div>
       </div>
-      <a class="btn btn-orange" href="https://deltacapitalgroup.com/ruben/" target="_blank" rel="noopener">Start My Application</a>
+      <a class="btn btn-orange" href="https://deltacapitalgroup.com/ruben/" target="_blank" rel="noopener">See What You Qualify For</a>
       <a class="btn btn-line" href="sms:3057353097">Text Me Directly</a>
     </div>
   </div>
@@ -279,17 +310,34 @@ footer .fine{border-top:1px solid rgba(255,255,255,.14);padding-top:16px;font-si
   <div class="wrap">
     <div><div class="v num">$5K–$5M</div><div class="k">Funding range</div></div>
     <div><div class="v green">2-Hour</div><div class="k">Rapid response</div></div>
-    <div><div class="v num">95%</div><div class="k">Funded within 48 hrs</div></div>
+    <div><div class="v num">95%</div><div class="k">Of approved clients funded in 48 hrs</div></div>
     <div><div class="v green">Soft Pull</div><div class="k">Credit check</div></div>
   </div>
 </div>
+
+<section class="qual">
+  <div class="wrap">
+    <div class="inner">
+      <div>
+        <h2>Three bars. That's the whole checklist.</h2>
+        <p>Clear these and you'll get a real offer with real numbers — worth applying even with past declines or an existing advance.</p>
+        <div class="qrow">
+          <div class="q"><div class="v num">6 mo</div><div class="k">In business</div></div>
+          <div class="q"><div class="v num">$15K</div><div class="k">Monthly revenue</div></div>
+          <div class="q"><div class="v num">500+</div><div class="k">Credit score</div></div>
+        </div>
+      </div>
+      <a class="btn btn-white" href="https://deltacapitalgroup.com/ruben/" target="_blank" rel="noopener">See What You Qualify For</a>
+    </div>
+  </div>
+</section>
 
 <section id="products">
   <div class="wrap">
     <div class="shead">
       <span class="eyebrow">Financing Options</span>
       <h2>Capital, structured your way.</h2>
-      <p>Six ways to fund your business — I'll match your file to the product that prices best.</p>
+      <p>Six ways to fund your business — I'll match your file to the product that prices best. Tap any option to see the details.</p>
     </div>
     <div class="pgrid">
 
@@ -303,20 +351,20 @@ footer .fine{border-top:1px solid rgba(255,255,255,.14);padding-top:16px;font-si
           <li>Short- and long-term structures</li>
           <li>Funds in as little as 48 hours</li>
         </ul>
-        <a class="go" href="https://deltacapitalgroup.com/ruben/" target="_blank" rel="noopener">Apply for a term loan</a>
+        <a class="go btn-tile" href="https://deltacapitalgroup.com/ruben/" target="_blank" rel="noopener">Apply for a term loan</a>
       </div>
 
       <div class="tile">
-        <div class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" aria-hidden="true"><path d="M12 3v18M5 8c0-2 3-3 7-3s7 1 7 3-3 3-7 3-7 1-7 3 3 3 7 3 7-1 7-3"/></svg></div>
+        <div class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" aria-hidden="true"><path d="M3 8a2 2 0 012-2h12a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M15 11h6v4h-6a2 2 0 010-4z"/></svg></div>
         <h3>Business Line of Credit</h3>
         <div class="best">Best for cash-flow flexibility</div>
-        <p>A revolving line you draw on when you need it — and pay for only what you use. Approval in as little as 48 hours, at better pricing than a credit card.</p>
+        <p>A revolving line you draw on when you need it — and pay for only what you use. Approval in as little as 48 hours, and often cheaper than carrying a balance on a card.</p>
         <ul>
           <li>Draw, repay, and draw again</li>
           <li>Interest only on what you use</li>
           <li>Always-there safety net</li>
         </ul>
-        <a class="go" href="https://deltacapitalgroup.com/ruben/" target="_blank" rel="noopener">Open a credit line</a>
+        <a class="go btn-tile" href="https://deltacapitalgroup.com/ruben/" target="_blank" rel="noopener">Open a credit line</a>
       </div>
 
       <div class="tile">
@@ -328,12 +376,13 @@ footer .fine{border-top:1px solid rgba(255,255,255,.14);padding-top:16px;font-si
           <li>Federally backed programs</li>
           <li>Lowest-cost capital available</li>
           <li>Real estate &amp; buyouts welcome</li>
+          <li class="via">Arranged through our lending partners</li>
         </ul>
-        <a class="go" href="https://deltacapitalgroup.com/ruben/" target="_blank" rel="noopener">Explore SBA options</a>
+        <a class="go btn-tile" href="https://deltacapitalgroup.com/ruben/" target="_blank" rel="noopener">Explore SBA options</a>
       </div>
 
       <div class="tile">
-        <div class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" aria-hidden="true"><path d="M4 17l4-8 4 5 4-9 4 12"/><path d="M3 21h18"/></svg></div>
+        <div class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" aria-hidden="true"><path d="M3 21h18M7 21v-5M12 21v-9M17 21v-13"/></svg></div>
         <h3>Revenue-Based Funding</h3>
         <div class="best">Best for speed — same-day possible</div>
         <p>An advance on your future sales, repaid as a percentage of revenue — so payments flex with your business. Know your exact total cost before you sign.</p>
@@ -342,7 +391,7 @@ footer .fine{border-top:1px solid rgba(255,255,255,.14);padding-top:16px;font-si
           <li>Payments scale with sales</li>
           <li>Full cost known upfront</li>
         </ul>
-        <a class="go" href="https://deltacapitalgroup.com/ruben/" target="_blank" rel="noopener">Get same-day funding</a>
+        <a class="go btn-tile" href="https://deltacapitalgroup.com/ruben/" target="_blank" rel="noopener">Get same-day funding</a>
       </div>
 
       <div class="tile">
@@ -354,8 +403,9 @@ footer .fine{border-top:1px solid rgba(255,255,255,.14);padding-top:16px;font-si
           <li>Equipment is the collateral</li>
           <li>Preserve working capital</li>
           <li>New and used both qualify</li>
+          <li class="via">Arranged through our lending partners</li>
         </ul>
-        <a class="go" href="https://deltacapitalgroup.com/ruben/" target="_blank" rel="noopener">Finance equipment</a>
+        <a class="go btn-tile" href="https://deltacapitalgroup.com/ruben/" target="_blank" rel="noopener">Finance equipment</a>
       </div>
 
       <div class="tile">
@@ -367,8 +417,9 @@ footer .fine{border-top:1px solid rgba(255,255,255,.14);padding-top:16px;font-si
           <li>Cash from receivables now</li>
           <li>No new debt on the books</li>
           <li>Grows with your invoicing</li>
+          <li class="via">Arranged through our lending partners</li>
         </ul>
-        <a class="go" href="https://deltacapitalgroup.com/ruben/" target="_blank" rel="noopener">Factor my invoices</a>
+        <a class="go btn-tile" href="https://deltacapitalgroup.com/ruben/" target="_blank" rel="noopener">Factor my invoices</a>
       </div>
 
     </div>
@@ -405,22 +456,6 @@ footer .fine{border-top:1px solid rgba(255,255,255,.14);padding-top:16px;font-si
   </div>
 </section>
 
-<section class="qual">
-  <div class="wrap">
-    <div class="inner">
-      <div>
-        <h2>Do you qualify? Probably.</h2>
-        <p>If your business clears these three bars, I can almost always get you an offer — even with past declines or an existing advance.</p>
-        <div class="qrow">
-          <div class="q"><div class="v num">6 mo</div><div class="k">In business</div></div>
-          <div class="q"><div class="v num">$15K</div><div class="k">Monthly revenue</div></div>
-          <div class="q"><div class="v num">500+</div><div class="k">Credit score</div></div>
-        </div>
-      </div>
-      <a class="btn btn-white" href="https://deltacapitalgroup.com/ruben/" target="_blank" rel="noopener">Check My Options — Free</a>
-    </div>
-  </div>
-</section>
 
 <section>
   <div class="wrap">
@@ -462,7 +497,7 @@ footer .fine{border-top:1px solid rgba(255,255,255,.14);padding-top:16px;font-si
     <h2 style="font-size:clamp(24px,3.4vw,34px);color:var(--navy);margin-bottom:10px">Ready when you are.</h2>
     <p style="color:var(--muted);font-size:17px;margin-bottom:26px">Five minutes. Soft pull. A real number — not a maybe.</p>
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      <a class="btn btn-orange" href="https://deltacapitalgroup.com/ruben/" target="_blank" rel="noopener">Start My Application</a>
+      <a class="btn btn-orange" href="https://deltacapitalgroup.com/ruben/" target="_blank" rel="noopener">See What You Qualify For</a>
       <a class="btn btn-line" href="tel:3057353097">Call (305) 735-3097</a>
     </div>
   </div>
@@ -485,8 +520,8 @@ footer .fine{border-top:1px solid rgba(255,255,255,.14);padding-top:16px;font-si
 </footer>
 
 <div class="mcta">
-  <a class="btn btn-orange" href="https://deltacapitalgroup.com/ruben/" target="_blank" rel="noopener">Apply Now</a>
-  <a class="btn btn-line" href="tel:3057353097">Call Ruben</a>
+  <a class="btn btn-orange mprimary" href="https://deltacapitalgroup.com/ruben/" target="_blank" rel="noopener">See What You Qualify For</a>
+  <a class="btn btn-line msms" href="sms:3057353097" aria-label="Text Ruben">Text</a>
 </div>
 
 <a class="bbb" href="https://www.bbb.org/us/fl/hollywood/profile/business-loans/delta-capital-group-inc-0633-92047417"
@@ -494,6 +529,37 @@ footer .fine{border-top:1px solid rgba(255,255,255,.14);padding-top:16px;font-si
   <span class="seal"><b>BBB</b></span>
   <span class="tx"><span class="r">A+ Rating</span><br><span class="a">Accredited Business</span></span>
 </a>
+
+<script>
+/* Collapse the product tiles on small screens so the page stays short. */
+(function () {
+  var mq = window.matchMedia('(max-width:620px)');
+  document.querySelectorAll('.tile').forEach(function (tile) {
+    var best = tile.querySelector('.best');
+    if (!best) return;
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'details';
+    btn.textContent = 'Details';
+    btn.setAttribute('aria-expanded', 'false');
+    btn.addEventListener('click', function () {
+      var open = tile.classList.toggle('open');
+      btn.setAttribute('aria-expanded', String(open));
+    });
+    best.insertAdjacentElement('afterend', btn);
+  });
+  function sync() {
+    document.querySelectorAll('.tile').forEach(function (tile) {
+      if (!mq.matches) {
+        tile.classList.remove('open');
+        var b = tile.querySelector('.details');
+        if (b) b.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+  mq.addEventListener ? mq.addEventListener('change', sync) : mq.addListener(sync);
+})();
+</script>
 
 </body>
 </html>
