@@ -609,6 +609,10 @@
                 padding: 1rem;
             }
 
+            .load-error {
+                margin: 1rem 1rem 0;
+            }
+
             .toolbar {
                 flex-wrap: wrap;
                 gap: 0.75rem;
@@ -802,6 +806,7 @@
         let mapInstance = null;
         let mapInitTimer = null;
         let markerLayer = null; // cluster group living on mapInstance
+        let mapZooming = false; // true between Leaflet zoomstart and zoomend
 
         // --- 2. UTILITY FUNCTIONS ---
         const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -814,13 +819,15 @@
         // Escape a value for safe insertion into HTML text or attribute positions
         const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+        const stageColor = (stage) => Object.prototype.hasOwnProperty.call(stageColors, stage) ? stageColors[stage] : "#94a3b8";
+
         const getStageBadge = (stage) => {
-            const color = stageColors[stage] || "#94a3b8";
+            const color = stageColor(stage);
             return `<span class="stage-badge" style="background-color: ${color}">${esc(stage)}</span>`;
         };
 
         const getIndustries = () => {
-            const ind = new Set(state.deals.map(d => d.industry));
+            const ind = new Set(state.deals.map(d => String(d.industry ?? '').trim()).filter(Boolean));
             return ["All", ...Array.from(ind)];
         };
 
@@ -830,7 +837,7 @@
             return state.deals.filter(deal => {
                 const matchesSearch = s(deal.businessName).includes(searchLower) ||
                                       s(deal.merchantName).includes(searchLower);
-                const matchesIndustry = state.industry === 'All' || deal.industry === state.industry;
+                const matchesIndustry = state.industry === 'All' || String(deal.industry ?? '').trim() === state.industry;
                 const matchesStage = state.stage === 'All' || deal.stage === state.stage;
                 return matchesSearch && matchesIndustry && matchesStage;
             });
@@ -850,7 +857,7 @@
         window.handleStageFilter = (e) => { state.stage = e.target.value; applyFilters(); };
         window.setView = (view) => { state.view = view; render(); };
         window.selectDeal = (id) => { state.selected = id; render(); };
-        window.clearSelection = () => { if (state.selected === null) return; state.selected = null; render(); };
+        window.clearSelection = () => { if (!state.selected) return; state.selected = null; render(); };
         window.triggerAlert = () => { alert("Follow-up preparation sequence initiated."); };
 
         // --- 4. CORE RENDER FUNCTION ---
@@ -912,8 +919,7 @@
             } else if (state.view === 'list') {
                 viewContainer.innerHTML = renderListView();
             } else if (state.view === 'map') {
-                const emptyNote = getFilteredDeals().length === 0 ? `<p style="color: var(--text-muted); margin-bottom: 1rem;">No deals match your search or filters.</p>` : '';
-                viewContainer.innerHTML = `${emptyNote}<div id="map" class="map-container"></div>`;
+                viewContainer.innerHTML = `<p id="mapEmptyNote" ${getFilteredDeals().length ? 'hidden' : ''} style="color: var(--text-muted); margin-bottom: 1rem;">No deals match your search or filters.</p><div id="map" class="map-container"></div>`;
                 // Initialize map after DOM paints
                 mapInitTimer = setTimeout(initMap, 100);
             }
@@ -1058,6 +1064,8 @@
             if (mapInstance || typeof L === 'undefined' || !document.getElementById('map')) return;
 
             mapInstance = L.map('map').setView([39.8283, -98.5795], 4);
+            mapZooming = false;
+            mapInstance.on('zoomstart', () => { mapZooming = true; }).on('zoomend', () => { mapZooming = false; });
             
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
@@ -1081,6 +1089,8 @@
             markerLayer.clearLayers();
 
             const filtered = getFilteredDeals();
+            const note = document.getElementById('mapEmptyNote');
+            if (note) note.hidden = filtered.length > 0;
             const markers = [];
 
             filtered.forEach(deal => {
@@ -1088,7 +1098,7 @@
                 const lat = parseFloat(deal.lat), lng = parseFloat(deal.lng);
                 if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
-                const color = stageColors[deal.stage] || "#94a3b8";
+                const color = stageColor(deal.stage);
                 
                 const customIcon = L.divIcon({
                     className: 'custom-marker',
@@ -1114,10 +1124,16 @@
 
             markers.forEach(m => markerLayer.addLayer(m));
 
-            // Keep the user's position, but if the new results are all off-screen bring them into view
-            if (markers.length && !markers.some(m => mapInstance.getBounds().contains(m.getLatLng()))) {
-                mapInstance.fitBounds(markerLayer.getBounds(), { padding: [40, 40], maxZoom: mapInstance.getZoom() });
-            }
+            // Keep the user's position, but if the new results are all off-screen bring them into view.
+            // A setView issued while Leaflet is mid zoom-animation is dropped or reverted, so when a zoom is
+            // running re-run this check (against whatever the layer holds by then) once it has finished.
+            const fitOffscreen = () => {
+                const shown = markerLayer.getLayers();
+                if (shown.length && !shown.some(m => mapInstance.getBounds().contains(m.getLatLng()))) {
+                    mapInstance.fitBounds(markerLayer.getBounds(), { padding: [40, 40], maxZoom: mapInstance.getZoom(), animate: false });
+                }
+            };
+            if (mapZooming) mapInstance.once('zoomend', fitOffscreen); else fitOffscreen();
         };
 
         // --- 6. APP INITIALIZATION & FETCH ---
@@ -1144,7 +1160,7 @@
                 if (!response.ok) throw new Error('HTTP ' + response.status);
                 const data = await response.json();
                 if (!Array.isArray(data)) throw new Error('Expected a JSON array of deals');
-                state.deals = data;
+                state.deals = data.filter(row => row && typeof row === 'object');
             } catch (error) {
                 console.error("Error fetching deals:", error);
                 state.deals = [];
