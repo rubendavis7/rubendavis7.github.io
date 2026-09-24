@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#151a22">
     <title>DealRoom - Pipeline Management</title>
+    <meta name="robots" content="noindex, nofollow">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,6 +21,7 @@
 
     <style>
         :root {
+            color-scheme: dark;
             --bg-main: #0a0e14;
             --bg-panel: #151a22;
             --bg-card: #1c222b;
@@ -35,7 +38,7 @@
             --stage-docs: #f97316;
             --stage-funded: #3b82f6;
 
-            --font-main: 'Inter', sans-serif;
+            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
 
         * {
@@ -50,7 +53,12 @@
             color: var(--text-main);
             display: flex;
             height: 100vh;
+            height: 100dvh;
             overflow: hidden;
+        }
+
+        button {
+            font-family: inherit;
         }
 
         /* Sidebar */
@@ -188,6 +196,10 @@
             font-family: var(--font-main);
         }
 
+        .filter-select:focus-visible {
+            border-color: var(--accent-orange);
+        }
+
         .view-toggles {
             display: flex;
             background-color: var(--bg-panel);
@@ -276,16 +288,23 @@
             border-color: var(--accent-orange);
         }
 
+        .deal-card:focus-visible {
+            outline: 2px solid var(--accent-orange);
+            outline-offset: -2px;
+        }
+
         .deal-card-title {
             font-weight: 600;
             font-size: 1.1rem;
             margin-bottom: 0.25rem;
+            overflow-wrap: anywhere;
         }
 
         .deal-card-client {
             color: var(--text-muted);
             font-size: 0.9rem;
             margin-bottom: 1rem;
+            overflow-wrap: anywhere;
         }
 
         .deal-card-footer {
@@ -339,6 +358,11 @@
             background-color: var(--bg-hover);
         }
 
+        tbody tr:focus-visible {
+            outline: 2px solid var(--accent-orange);
+            outline-offset: -2px;
+        }
+
         /* Map View */
         .map-container {
             width: 100%;
@@ -357,6 +381,10 @@
         
         .leaflet-popup-tip {
             background-color: var(--bg-panel) !important;
+        }
+
+        .leaflet-popup-content h4 {
+            overflow-wrap: anywhere;
         }
 
         .map-popup-btn {
@@ -379,7 +407,7 @@
         .detail-view {
             display: flex;
             gap: 2rem;
-            height: 100%;
+            min-height: 100%;
         }
 
         .detail-panel {
@@ -406,7 +434,8 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            margin-bottom: 1.5rem;
+            padding: 0.5rem;
+            margin: -0.5rem 0 1rem -0.5rem;
         }
 
         .btn-back:hover {
@@ -418,8 +447,11 @@
         }
 
         .detail-title {
+            outline: none;          /* focus target, not interactive: no ring */
+            font-weight: inherit;   /* keep the regular weight now that this is an h1 */
             font-size: 1.8rem;
             margin-bottom: 0.5rem;
+            overflow-wrap: anywhere;
         }
 
         .detail-grid {
@@ -458,6 +490,11 @@
 
         .btn-primary:hover {
             background-color: #e57d39;
+        }
+
+        .load-error {
+            margin: 2rem 2rem 0;
+            border-color: var(--stage-docs);
         }
 
         /* Timeline */
@@ -513,6 +550,19 @@
             color: white;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+        }
+
+        /* Visually hidden but read by screen readers (persistent live region for result counts) */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
         }
 
         /* Small screens: sidebar collapses into a top strip, panels stack */
@@ -576,6 +626,10 @@
 
             .content-area {
                 padding: 1rem;
+            }
+
+            .load-error {
+                margin: 1rem 1rem 0;
             }
 
             .toolbar {
@@ -647,7 +701,7 @@
 
             .detail-view {
                 flex-direction: column;
-                height: auto;
+                min-height: 0;
                 gap: 1rem;
             }
 
@@ -657,11 +711,19 @@
 
             .detail-title {
                 font-size: 1.5rem;
-                overflow-wrap: anywhere;
             }
         }
 
         @media (max-width: 560px) {
+            .sidebar {
+                flex-wrap: wrap;
+            }
+
+            .sidebar nav {
+                flex-wrap: wrap;
+                overflow: visible;
+            }
+
             .detail-grid {
                 grid-template-columns: 1fr;
                 gap: 1rem;
@@ -669,6 +731,24 @@
 
             .date-display {
                 font-size: 0.8rem;
+            }
+
+            /* Phone list view: keep Business | Amount | Stage on screen; Client, Industry,
+               Next Action and Due Date are one tap away on the detail view */
+            .table-container th:nth-child(2), .table-container td:nth-child(2),
+            .table-container th:nth-child(3), .table-container td:nth-child(3),
+            .table-container th:nth-child(6), .table-container td:nth-child(6),
+            .table-container th:nth-child(7), .table-container td:nth-child(7) {
+                display: none;
+            }
+
+            .table-container th, .table-container td {
+                padding: 0.6rem 0.5rem;
+                font-size: 0.9rem;
+            }
+
+            .table-container td:nth-child(1) {
+                white-space: normal;
             }
         }
 
@@ -682,12 +762,12 @@
             <span>◆</span> DealRoom
         </div>
         <nav>
-            <a href="#" class="nav-link active">Pipeline</a>
-            <a href="#" class="nav-link">Today</a>
-            <a href="#" class="nav-link">Draft Review</a>
-            <a href="#" class="nav-link">Advisor Team</a>
-            <a href="#" class="nav-link">Insights</a>
-            <a href="#" class="nav-link">Connections</a>
+            <a href="#" class="nav-link active" aria-current="page" onclick="event.preventDefault(); window.clearSelection();">Pipeline</a>
+            <a href="#" class="nav-link" onclick="event.preventDefault()">Today</a>
+            <a href="#" class="nav-link" onclick="event.preventDefault()">Draft Review</a>
+            <a href="#" class="nav-link" onclick="event.preventDefault()">Advisor Team</a>
+            <a href="#" class="nav-link" onclick="event.preventDefault()">Insights</a>
+            <a href="#" class="nav-link" onclick="event.preventDefault()">Connections</a>
         </nav>
     </aside>
 
@@ -695,11 +775,12 @@
     <div class="main-wrapper">
         <!-- Header -->
         <header class="top-header">
-            <input type="text" id="searchInput" class="search-bar" placeholder="Search business or merchant name..." oninput="window.handleSearch(event)">
+            <input type="text" id="searchInput" class="search-bar" placeholder="Search business or merchant name..." aria-label="Search business or merchant name" oninput="window.handleSearch(event)">
             <div class="header-right">
                 <div class="date-display" id="dateDisplay"></div>
                 <div class="avatar">DR</div>
             </div>
+            <div id="resultsStatus" class="sr-only" role="status"></div>
         </header>
 
         <!-- Dynamic Content Area -->
@@ -744,40 +825,78 @@
 
         let mapInstance = null;
         let mapInitTimer = null;
+        let markerLayer = null; // cluster group living on mapInstance
+        let mapZooming = false; // true between Leaflet zoomstart and zoomend
 
         // --- 2. UTILITY FUNCTIONS ---
+        const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
         const formatCurrency = (amount) => {
-            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
+            // Sheet cells may arrive as text ("50,000", "$50,000", "N/A") or be missing; never render "$NaN".
+            const n = typeof amount === 'number' ? amount : Number(String(amount ?? '').replace(/[$,\s]/g, '') || NaN);
+            return Number.isFinite(n) ? usd.format(n) : '—';
         };
 
+        // Escape a value for safe insertion into HTML text or attribute positions
+        const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+        // Compare ids the way the HTML parser stores them: CR and CRLF inside an attribute value become LF
+        const norm = (v) => String(v ?? '').replace(/\r\n?/g, '\n');
+
+        const stageColor = (stage) => Object.prototype.hasOwnProperty.call(stageColors, stage) ? stageColors[stage] : "#94a3b8";
+
         const getStageBadge = (stage) => {
-            const color = stageColors[stage] || "#94a3b8";
-            return `<span class="stage-badge" style="background-color: ${color}">${stage}</span>`;
+            const color = stageColor(stage);
+            return `<span class="stage-badge" style="background-color: ${color}">${esc(stage)}</span>`;
         };
 
         const getIndustries = () => {
-            const ind = new Set(state.deals.map(d => d.industry));
+            const ind = new Set(state.deals.map(d => String(d.industry ?? '').trim()).filter(Boolean));
             return ["All", ...Array.from(ind)];
         };
 
         const getFilteredDeals = () => {
+            const s = v => String(v ?? '').toLowerCase();
+            const searchLower = s(state.search).trim();
             return state.deals.filter(deal => {
-                const searchLower = state.search.toLowerCase();
-                const matchesSearch = deal.businessName.toLowerCase().includes(searchLower) || 
-                                      deal.merchantName.toLowerCase().includes(searchLower);
-                const matchesIndustry = state.industry === 'All' || deal.industry === state.industry;
+                const matchesSearch = s(deal.businessName).includes(searchLower) ||
+                                      s(deal.merchantName).includes(searchLower);
+                const matchesIndustry = state.industry === 'All' || String(deal.industry ?? '').trim() === state.industry;
                 const matchesStage = state.stage === 'All' || deal.stage === state.stage;
                 return matchesSearch && matchesIndustry && matchesStage;
             });
         };
 
         // --- 3. EVENT HANDLERS (Bound to Window) ---
-        window.handleSearch = (e) => { state.search = e.target.value; render(); };
-        window.handleIndustryFilter = (e) => { state.industry = e.target.value; render(); };
-        window.handleStageFilter = (e) => { state.stage = e.target.value; render(); };
+        // Filter/search changes: when a map is live, only swap its markers so zoom, center and tiles survive
+        const applyFilters = () => {
+            if (mapInstance && state.view === 'map') {
+                refreshMarkers();
+            } else {
+                render();
+            }
+            announceResults();
+        };
+        // Tell screen-reader users what a filter/search change did; the region lives in the header so it survives re-renders
+        const announceResults = () => {
+            const el = document.getElementById('resultsStatus');
+            if (!el) return;
+            const n = getFilteredDeals().length;
+            el.textContent = n === 0 ? 'No deals match your search or filters.' : `Showing ${n} of ${state.deals.length} deals.`;
+        };
+        window.handleSearch = (e) => { state.search = e.target.value; state.selected = null; applyFilters(); };
+        window.handleIndustryFilter = (e) => { state.industry = e.target.value; applyFilters(); };
+        window.handleStageFilter = (e) => { state.stage = e.target.value; applyFilters(); };
         window.setView = (view) => { state.view = view; render(); };
         window.selectDeal = (id) => { state.selected = id; render(); };
-        window.clearSelection = () => { state.selected = null; render(); };
+        window.clearSelection = () => {
+            if (!state.selected) return;
+            const last = String(state.selected);
+            state.selected = null;
+            render();
+            // Return focus to the card/row that opened the file, or to the active view button
+            const origin = document.querySelector(`#mainContent [data-id="${CSS.escape(last)}"]`) || document.getElementById('viewBtn-' + state.view);
+            if (origin) origin.focus();
+        };
         window.triggerAlert = () => { alert("Follow-up preparation sequence initiated."); };
 
         // --- 4. CORE RENDER FUNCTION ---
@@ -792,47 +911,57 @@
             if (mapInstance) {
                 mapInstance.remove();
                 mapInstance = null;
+                markerLayer = null;
             }
 
             // Detail View Mode
             if (state.selected) {
-                const deal = state.deals.find(d => d.id === state.selected);
+                const deal = state.deals.find(d => norm(d.id) === norm(state.selected));
                 if (deal) {
                     mainContent.innerHTML = renderDetailView(deal);
+                    // Move focus to the new view so keyboard and screen-reader users are not dropped on <body>
+                    const title = mainContent.querySelector('.detail-title');
+                    if (title) title.focus();
                     return; // Exit render function early
                 }
                 state.selected = null; // Unknown ID: fall back to the dashboard
             }
             
             // Dashboard Mode (Board/List/Map)
+            // Remember which toolbar control had focus so a keyboard user keeps their place across the rebuild
+            const focusedId = document.activeElement && mainContent.contains(document.activeElement) ? document.activeElement.id : null;
             mainContent.innerHTML = `
                 <div class="toolbar">
                     <div class="filters">
-                        <select class="filter-select" onchange="window.handleIndustryFilter(event)">
-                            ${getIndustries().map(ind => `<option value="${ind}" ${state.industry === ind ? 'selected' : ''}>Industry: ${ind}</option>`).join('')}
+                        <select id="industryFilter" class="filter-select" aria-label="Filter by industry" onchange="window.handleIndustryFilter(event)">
+                            ${getIndustries().map(ind => `<option value="${esc(ind)}" ${state.industry === ind ? 'selected' : ''}>Industry: ${esc(ind)}</option>`).join('')}
                         </select>
-                        <select class="filter-select" onchange="window.handleStageFilter(event)">
+                        <select id="stageFilter" class="filter-select" aria-label="Filter by stage" onchange="window.handleStageFilter(event)">
                             <option value="All" ${state.stage === 'All' ? 'selected' : ''}>Stage: All</option>
                             ${stages.map(s => `<option value="${s}" ${state.stage === s ? 'selected' : ''}>${s}</option>`).join('')}
                         </select>
                     </div>
                     <div class="view-toggles">
-                        <button class="view-btn ${state.view === 'board' ? 'active' : ''}" onclick="window.setView('board')">Board</button>
-                        <button class="view-btn ${state.view === 'list' ? 'active' : ''}" onclick="window.setView('list')">List</button>
-                        <button class="view-btn ${state.view === 'map' ? 'active' : ''}" onclick="window.setView('map')">Map</button>
+                        <button id="viewBtn-board" class="view-btn ${state.view === 'board' ? 'active' : ''}" aria-pressed="${state.view === 'board'}" onclick="window.setView('board')">Board</button>
+                        <button id="viewBtn-list" class="view-btn ${state.view === 'list' ? 'active' : ''}" aria-pressed="${state.view === 'list'}" onclick="window.setView('list')">List</button>
+                        <button id="viewBtn-map" class="view-btn ${state.view === 'map' ? 'active' : ''}" aria-pressed="${state.view === 'map'}" onclick="window.setView('map')">Map</button>
                     </div>
                 </div>
                 <div id="viewContainer"></div>
             `;
 
             const viewContainer = document.getElementById('viewContainer');
+            if (focusedId) {
+                const again = document.getElementById(focusedId);
+                if (again) again.focus({ preventScroll: true });
+            }
             
             if (state.view === 'board') {
                 viewContainer.innerHTML = renderBoardView();
             } else if (state.view === 'list') {
                 viewContainer.innerHTML = renderListView();
             } else if (state.view === 'map') {
-                viewContainer.innerHTML = `<div id="map" class="map-container"></div>`;
+                viewContainer.innerHTML = `<p id="mapEmptyNote" ${getFilteredDeals().length ? 'hidden' : ''} style="color: var(--text-muted); margin-bottom: 1rem;">No deals match your search or filters.</p><div id="map" class="map-container"></div>`;
                 // Initialize map after DOM paints
                 mapInitTimer = setTimeout(initMap, 100);
             }
@@ -853,9 +982,9 @@
                         </div>
                         <div class="column-body">
                             ${stageDeals.map(deal => `
-                                <div class="deal-card" onclick="window.selectDeal('${deal.id}')">
-                                    <div class="deal-card-title">${deal.businessName}</div>
-                                    <div class="deal-card-client">${deal.merchantName} • ${deal.industry}</div>
+                                <div class="deal-card" role="button" tabindex="0" data-id="${esc(deal.id)}">
+                                    <div class="deal-card-title">${esc(deal.businessName)}</div>
+                                    <div class="deal-card-client">${esc(deal.merchantName)} • ${esc(deal.industry)}</div>
                                     <div class="deal-card-footer">
                                         <div class="deal-amount">${formatCurrency(deal.amountRequested)}</div>${getStageBadge(deal.stage)}
                                     </div>
@@ -889,18 +1018,22 @@
             `;
             filtered.forEach(deal => {
                 html += `
-                    <tr onclick="window.selectDeal('${deal.id}')">
-                        <td style="font-weight: 500;">${deal.businessName}</td>
-                        <td>${deal.merchantName}</td>
-                        <td>${deal.industry}</td>
+                    <tr tabindex="0" data-id="${esc(deal.id)}">
+                        <td style="font-weight: 500;">${esc(deal.businessName)}</td>
+                        <td>${esc(deal.merchantName)}</td>
+                        <td>${esc(deal.industry)}</td>
                         <td style="font-weight: 600; color: var(--accent-orange);">${formatCurrency(deal.amountRequested)}</td>
                         <td>${getStageBadge(deal.stage)}</td>
-                        <td>${deal.nextAction}</td>
-                        <td>${deal.dueDate}</td>
+                        <td>${esc(deal.nextAction)}</td>
+                        <td>${esc(deal.dueDate)}</td>
                     </tr>
                 `;
             });
-            html += `</tbody></table></div>`;
+            html += `</tbody></table>`;
+            if (filtered.length === 0) {
+                html += `<div style="padding: 1.5rem; text-align: center; color: var(--text-muted);">No deals match your search or filters.</div>`;
+            }
+            html += `</div>`;
             return html;
         };
 
@@ -911,15 +1044,15 @@
                         <button class="btn-back" onclick="window.clearSelection()">← Back to Pipeline</button>
                         
                         <div class="detail-header">
-                            <div class="detail-title">${deal.businessName}</div>
-                            <div style="color: var(--text-muted); margin-bottom: 1rem;">Client: ${deal.merchantName}</div>
+                            <h1 class="detail-title" tabindex="-1">${esc(deal.businessName)}</h1>
+                            <div style="color: var(--text-muted); margin-bottom: 1rem;">Client: ${esc(deal.merchantName)}</div>
                             ${getStageBadge(deal.stage)}
                         </div>
 
                         <div class="detail-grid">
                             <div class="info-group">
                                 <label>Industry</label>
-                                <div>${deal.industry}</div>
+                                <div>${esc(deal.industry)}</div>
                             </div>
                             <div class="info-group">
                                 <label>Requested Amount</label>
@@ -927,19 +1060,19 @@
                             </div>
                             <div class="info-group">
                                 <label>Next Action</label>
-                                <div>${deal.nextAction}</div>
+                                <div>${esc(deal.nextAction)}</div>
                             </div>
                             <div class="info-group">
                                 <label>Due Date</label>
-                                <div>${deal.dueDate}</div>
+                                <div>${esc(deal.dueDate)}</div>
                             </div>
                             <div class="info-group">
                                 <label>Last Contact</label>
-                                <div>${deal.lastContact}</div>
+                                <div>${esc(deal.lastContact)}</div>
                             </div>
                             <div class="info-group">
                                 <label>System ID</label>
-                                <div>${deal.id}</div>
+                                <div>${esc(deal.id)}</div>
                             </div>
                         </div>
 
@@ -954,8 +1087,8 @@
                                 <div class="timeline-content">Viewed application details in DealRoom</div>
                             </div>
                             <div class="timeline-item">
-                                <div class="timeline-date">${deal.lastContact}</div>
-                                <div class="timeline-content">Last recorded communication with ${deal.merchantName}</div>
+                                <div class="timeline-date">${esc(deal.lastContact)}</div>
+                                <div class="timeline-content">Last recorded communication with ${esc(deal.merchantName)}</div>
                             </div>
                             <div class="timeline-item">
                                 <div class="timeline-date">2024-05-15</div>
@@ -973,22 +1106,44 @@
             if (mapInstance || typeof L === 'undefined' || !document.getElementById('map')) return;
 
             mapInstance = L.map('map').setView([39.8283, -98.5795], 4);
+            mapZooming = false;
+            mapInstance.on('zoomstart', () => { mapZooming = true; }).on('zoomend', () => { mapZooming = false; });
             
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
                 subdomains: 'abcd',
                 maxZoom: 20
             }).addTo(mapInstance);
 
-            const markers = L.markerClusterGroup({
-                showCoverageOnHover: false,
-                spiderfyOnMaxZoom: true
-            });
-            
+            // Leaflet only handles Escape while the map container itself is focused; cover markers and the popup too
+            mapInstance.getContainer().addEventListener('keydown', (e) => { if (e.key === 'Escape') mapInstance.closePopup(); });
+
+            refreshMarkers();
+        };
+
+        // Rebuild the marker layer from the current filters without touching the map itself
+        const refreshMarkers = () => {
+            if (!mapInstance) return;
+            if (!markerLayer) {
+                // Degrade to a plain feature group if Leaflet.markercluster failed to load
+                markerLayer = (typeof L.markerClusterGroup === 'function')
+                    ? L.markerClusterGroup({ showCoverageOnHover: false, spiderfyOnMaxZoom: true })
+                    : L.featureGroup();
+                mapInstance.addLayer(markerLayer);
+            }
+            markerLayer.clearLayers();
+
             const filtered = getFilteredDeals();
+            const note = document.getElementById('mapEmptyNote');
+            if (note) note.hidden = filtered.length > 0;
+            const markers = [];
 
             filtered.forEach(deal => {
-                const color = stageColors[deal.stage] || "#94a3b8";
+                // Skip deals without usable coordinates (blank/missing sheet cells) instead of throwing
+                const lat = parseFloat(deal.lat), lng = parseFloat(deal.lng);
+                if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+                const color = stageColor(deal.stage);
                 
                 const customIcon = L.divIcon({
                     className: 'custom-marker',
@@ -997,35 +1152,74 @@
                     iconAnchor: [10, 10]
                 });
 
-                const marker = L.marker([deal.lat, deal.lng], { icon: customIcon });
+                const marker = L.marker([lat, lng], { icon: customIcon, title: String(deal.businessName ?? '').trim() || String(deal.id ?? '').trim() || 'Deal' });
                 
                 const popupContent = `
                     <div style="min-width: 150px; padding: 5px;">
-                        <h4 style="margin: 0 0 5px 0; color: #fff;">${deal.businessName}</h4>
+                        <h4 style="margin: 0 0 5px 0; color: #fff;">${esc(deal.businessName)}</h4>
                         <p style="margin: 0 0 5px 0; font-weight: bold; color: var(--accent-orange);">${formatCurrency(deal.amountRequested)}</p>
-                        <p style="margin: 0 0 10px 0; font-size: 0.85rem; color: #aaa;">${deal.stage}</p>
-                        <button class="map-popup-btn" onclick="window.selectDeal('${deal.id}')">Open File</button>
+                        <p style="margin: 0 0 10px 0; font-size: 0.85rem; color: #aaa;">${esc(deal.stage)}</p>
+                        <button class="map-popup-btn" data-id="${esc(deal.id)}">Open File</button>
                     </div>
                 `;
                 
                 marker.bindPopup(popupContent);
-                markers.addLayer(marker);
+                markers.push(marker);
             });
 
-            mapInstance.addLayer(markers);
+            markers.forEach(m => markerLayer.addLayer(m));
+
+            // Keep the user's position, but if the new results are all off-screen bring them into view.
+            // A setView issued while Leaflet is mid zoom-animation is dropped or reverted, so when a zoom is
+            // running re-run this check (against whatever the layer holds by then) once it has finished.
+            const fitOffscreen = () => {
+                const shown = markerLayer.getLayers();
+                if (shown.length && !shown.some(m => mapInstance.getBounds().contains(m.getLatLng()))) {
+                    mapInstance.fitBounds(markerLayer.getBounds(), { padding: [40, 40], maxZoom: mapInstance.getZoom(), animate: false });
+                }
+            };
+            if (mapZooming) mapInstance.once('zoomend', fitOffscreen); else fitOffscreen();
         };
 
         // --- 6. APP INITIALIZATION & FETCH ---
         const fetchDeals = async () => {
-            /* 
+            /*
             // READY FOR GOOGLE SHEETS API INTEGRATION
+            //
+            // WARNING - READ BEFORE ENABLING THIS BLOCK:
+            // This file is served from a PUBLIC GitHub Pages site (public repo).
+            // Anything committed here, including the Apps Script URL below, is
+            // world-readable. For an unauthenticated fetch() from a static page
+            // to succeed, the Apps Script web app must be deployed with access
+            // "Anyone", which lets anyone who opens this page (or the URL)
+            // download every row of the sheet. Do NOT point this at a sheet with
+            // real merchant data while the page is hosted publicly. Keep the
+            // public copy on the mock data below, or host the live version
+            // behind authentication (private repo + access-controlled host).
+            //
+            // Replace YOUR_GOOGLE_APPS_SCRIPT_URL, then delete the two mock-data lines below.
+            const mainContent = document.getElementById('mainContent');
+            mainContent.innerHTML = '<p role="status" style="color: var(--text-muted);">Loading deals…</p>';
             try {
                 const response = await fetch('YOUR_GOOGLE_APPS_SCRIPT_URL');
+                if (!response.ok) throw new Error('HTTP ' + response.status);
                 const data = await response.json();
-                state.deals = data;
-                render();
+                if (!Array.isArray(data)) throw new Error('Expected a JSON array of deals');
+                state.deals = data.filter(row => row && typeof row === 'object');
             } catch (error) {
                 console.error("Error fetching deals:", error);
+                state.deals = [];
+                mainContent.insertAdjacentHTML('beforebegin',
+                    '<div class="detail-panel load-error" role="alert">Could not load deals from Google Sheets. Check the script URL and its deployment access (details in the browser console).</div>');
+            }
+            try {
+                render();
+            } catch (error) {
+                console.error("Error rendering deals:", error);
+                state.deals = [];
+                mainContent.insertAdjacentHTML('beforebegin',
+                    '<div class="detail-panel load-error" role="alert">Could not display the loaded deals (details in the browser console).</div>');
+                render();
             }
             */
             
@@ -1037,9 +1231,33 @@
         const init = () => {
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('en-US', options);
-            
+
+            // Pick up a search value the browser restored into the input on reload
+            state.search = document.getElementById('searchInput').value || '';
+
+            // Deal ids live in a data attribute; one delegated listener opens the file
+            // (the listener sits on the persistent container so it survives every re-render)
+            const mainContent = document.getElementById('mainContent');
+            mainContent.addEventListener('click', (e) => {
+                const el = e.target.closest('[data-id]');
+                if (el) window.selectDeal(el.dataset.id);
+            });
+
+            // Keyboard activation for cards and rows (Enter or Space behaves like click)
+            mainContent.addEventListener('keydown', (e) => {
+                if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.deal-card, tbody tr')) {
+                    e.preventDefault();
+                    e.target.click();
+                }
+                // Leaflet opens a marker popup on Enter only; let Space activate a focused marker as well
+                if (e.key === ' ' && e.target.matches('.leaflet-marker-icon')) {
+                    e.preventDefault();
+                    e.target.click();
+                }
+            });
+
             // Kickoff data load and render
-            fetchDeals(); 
+            fetchDeals();
         };
 
         // Run when DOM is ready
