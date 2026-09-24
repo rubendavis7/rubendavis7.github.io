@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DealRoom - Pipeline Management</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    
+    <!-- Leaflet MarkerCluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+
+    <style>
+        :root {
+            --bg-main: #0a0e14;
+            --bg-panel: #151a22;
+            --bg-card: #1c222b;
+            --bg-hover: #262e39;
+            --accent-orange: #ff8c42;
+            --accent-blue: #0f2a3f;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border-color: #2e3643;
+            
+            --stage-lead: #94a3b8;
+            --stage-underwriting: #f59e0b;
+            --stage-offer: #10b981;
+            --stage-docs: #f97316;
+            --stage-funded: #3b82f6;
+
+            --font-main: 'Inter', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background-color: var(--bg-panel);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem 0;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            padding: 0 1.5rem 2rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo span {
+            color: var(--accent-orange);
+        }
+
+        .nav-link {
+            padding: 1rem 1.5rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background-color: var(--accent-blue);
+            color: var(--text-main);
+            border-left-color: var(--accent-orange);
+        }
+
+        /* Main Content Wrapper */
+        .main-wrapper {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .top-header {
+            height: 70px;
+            background-color: var(--bg-panel);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            flex-shrink: 0;
+        }
+
+        .search-bar {
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            width: 300px;
+            font-family: var(--font-main);
+            outline: none;
+        }
+
+        .search-bar:focus {
+            border-color: var(--accent-orange);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .date-display {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background-color: var(--accent-orange);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Main Area */
+        .content-area {
+            flex-grow: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* Controls / Toolbar */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .filter-select {
+            background-color: var(--bg-panel);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            outline: none;
+            cursor: pointer;
+            font-family: var(--font-main);
+        }
+
+        .view-toggles {
+            display: flex;
+            background-color: var(--bg-panel);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .view-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.5rem 1.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .view-btn.active {
+            background-color: var(--accent-blue);
+            color: white;
+        }
+
+        /* Board View (Kanban) */
+        .board-container {
+            display: flex;
+            gap: 1.5rem;
+            height: 100%;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+        }
+
+        .board-column {
+            background-color: var(--bg-panel);
+            border-radius: 8px;
+            min-width: 300px;
+            max-width: 300px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-color);
+        }
+
+        .column-header {
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .badge-count {
+            background-color: var(--bg-card);
+            color: var(--text-muted);
+            padding: 0.1rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .column-body {
+            padding: 1rem;
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .deal-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .deal-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+            border-color: var(--accent-orange);
+        }
+
+        .deal-card-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .deal-card-client {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .deal-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+            padding-top: 0.75rem;
+        }
+
+        .deal-amount {
+            font-weight: 700;
+            color: var(--accent-orange);
+        }
+
+        /* List View (Table) */
+        .table-container {
+            background-color: var(--bg-panel);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            overflow: auto;
+            max-height: calc(100vh - 200px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--text-muted);
+            background-color: var(--bg-card);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tbody tr {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        tbody tr:hover {
+            background-color: var(--bg-hover);
+        }
+
+        /* Map View */
+        .map-container {
+            width: 100%;
+            height: calc(100vh - 220px);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            background-color: var(--bg-panel);
+        }
+
+        .leaflet-popup-content-wrapper {
+            background-color: var(--bg-panel) !important;
+            color: var(--text-main) !important;
+            border: 1px solid var(--border-color);
+        }
+        
+        .leaflet-popup-tip {
+            background-color: var(--bg-panel) !important;
+        }
+
+        .map-popup-btn {
+            background-color: var(--accent-orange);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-top: 0.5rem;
+            width: 100%;
+        }
+
+        .map-popup-btn:hover {
+            background-color: #e57d39;
+        }
+
+        /* Detail View */
+        .detail-view {
+            display: flex;
+            gap: 2rem;
+            height: 100%;
+        }
+
+        .detail-panel {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+        }
+
+        .detail-left {
+            flex: 2;
+        }
+
+        .detail-right {
+            flex: 1;
+        }
+
+        .btn-back {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-back:hover {
+            color: var(--text-main);
+        }
+
+        .detail-header {
+            margin-bottom: 2rem;
+        }
+
+        .detail-title {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-group label {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 0.3rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-group div {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-orange);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background-color: #e57d39;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: var(--border-color);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -1.85rem;
+            top: 0.2rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--accent-blue);
+            border: 2px solid var(--bg-panel);
+        }
+
+        .timeline-date {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.2rem;
+        }
+
+        .timeline-content {
+            font-size: 0.95rem;
+        }
+
+        /* Stage Badges */
+        .stage-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <span>◆</span> DealRoom
+        </div>
+        <nav>
+            <a href="#" class="nav-link active">Pipeline</a>
+            <a href="#" class="nav-link">Today</a>
+            <a href="#" class="nav-link">Draft Review</a>
+            <a href="#" class="nav-link">Advisor Team</a>
+            <a href="#" class="nav-link">Insights</a>
+            <a href="#" class="nav-link">Connections</a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-wrapper">
+        <!-- Header -->
+        <header class="top-header">
+            <input type="text" id="searchInput" class="search-bar" placeholder="Search business or merchant name..." onkeyup="window.handleSearch(event)">
+            <div class="header-right">
+                <div class="date-display" id="dateDisplay"></div>
+                <div class="avatar">DR</div>
+            </div>
+        </header>
+
+        <!-- Dynamic Content Area -->
+        <main class="content-area" id="mainContent">
+            <!-- Rendered dynamically by JavaScript -->
+        </main>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    
+    <!-- Leaflet MarkerCluster JS -->
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
+    <script>
+        // --- 1. DATA & STATE ---
+        const initialData = [
+            { id: "M-101", merchantName: "John Smith", businessName: "Apex Retail", industry: "Retail", amountRequested: 50000, stage: "Underwriting", nextAction: "Follow up on bank statements", dueDate: "2024-06-15", lat: 40.7128, lng: -74.0060, lastContact: "2024-06-01" },
+            { id: "M-102", merchantName: "Maria Garcia", businessName: "Sunset Cafe", industry: "Restaurant", amountRequested: 120000, stage: "Offer Accepted", nextAction: "Send contract for signature", dueDate: "2024-06-10", lat: 34.0522, lng: -118.2437, lastContact: "2024-06-02" },
+            { id: "M-103", merchantName: "David Chen", businessName: "Midwest Logistics", industry: "Transportation", amountRequested: 250000, stage: "Lead", nextAction: "Initial discovery call", dueDate: "2024-06-20", lat: 41.8781, lng: -87.6298, lastContact: "2024-05-28" },
+            { id: "M-104", merchantName: "Sarah Johnson", businessName: "Johnson's Bakery", industry: "Restaurant", amountRequested: 75000, stage: "Missing Docs", nextAction: "Request voided check", dueDate: "2024-06-12", lat: 29.7604, lng: -95.3698, lastContact: "2024-06-03" },
+            { id: "M-105", merchantName: "Mike Brown", businessName: "Brown's Auto", industry: "Automotive", amountRequested: 150000, stage: "Funded", nextAction: "N/A", dueDate: "2024-05-30", lat: 33.7490, lng: -84.3880, lastContact: "2024-05-30" }
+        ];
+
+        let state = {
+            deals: [],
+            view: 'board', // 'board', 'list', 'map'
+            selected: null, // deal ID
+            search: '',
+            industry: 'All',
+            stage: 'All'
+        };
+
+        const stages = ["Lead", "Underwriting", "Offer Accepted", "Missing Docs", "Funded"];
+        const stageColors = {
+            "Lead": "#94a3b8",
+            "Underwriting": "#f59e0b",
+            "Offer Accepted": "#10b981",
+            "Missing Docs": "#f97316",
+            "Funded": "#3b82f6"
+        };
+
+        let mapInstance = null;
+
+        // --- 2. UTILITY FUNCTIONS ---
+        const formatCurrency = (amount) => {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
+        };
+
+        const getStageBadge = (stage) => {
+            const color = stageColors[stage] || "#94a3b8";
+            return `<span class="stage-badge" style="background-color: ${color}">${stage}</span>`;
+        };
+
+        const getIndustries = () => {
+            const ind = new Set(state.deals.map(d => d.industry));
+            return ["All", ...Array.from(ind)];
+        };
+
+        const getFilteredDeals = () => {
+            return state.deals.filter(deal => {
+                const searchLower = state.search.toLowerCase();
+                const matchesSearch = deal.businessName.toLowerCase().includes(searchLower) || 
+                                      deal.merchantName.toLowerCase().includes(searchLower);
+                const matchesIndustry = state.industry === 'All' || deal.industry === state.industry;
+                const matchesStage = state.stage === 'All' || deal.stage === state.stage;
+                return matchesSearch && matchesIndustry && matchesStage;
+            });
+        };
+
+        // --- 3. EVENT HANDLERS (Bound to Window) ---
+        window.handleSearch = (e) => { state.search = e.target.value; render(); };
+        window.handleIndustryFilter = (e) => { state.industry = e.target.value; render(); };
+        window.handleStageFilter = (e) => { state.stage = e.target.value; render(); };
+        window.setView = (view) => { state.view = view; render(); };
+        window.selectDeal = (id) => { state.selected = id; render(); };
+        window.clearSelection = () => { state.selected = null; render(); };
+        window.triggerAlert = () => { alert("Follow-up preparation sequence initiated."); };
+
+        // --- 4. CORE RENDER FUNCTION ---
+        const render = () => {
+            const mainContent = document.getElementById('mainContent');
+            
+            // Clean up Leaflet map instance safely if switching views
+            if (mapInstance) {
+                mapInstance.remove();
+                mapInstance = null;
+            }
+
+            // Detail View Mode
+            if (state.selected) {
+                const deal = state.deals.find(d => d.id === state.selected);
+                mainContent.innerHTML = renderDetailView(deal);
+                return; // Exit render function early
+            } 
+            
+            // Dashboard Mode (Board/List/Map)
+            mainContent.innerHTML = `
+                <div class="toolbar">
+                    <div class="filters">
+                        <select class="filter-select" onchange="window.handleIndustryFilter(event)">
+                            ${getIndustries().map(ind => `<option value="${ind}" ${state.industry === ind ? 'selected' : ''}>Industry: ${ind}</option>`).join('')}
+                        </select>
+                        <select class="filter-select" onchange="window.handleStageFilter(event)">
+                            <option value="All" ${state.stage === 'All' ? 'selected' : ''}>Stage: All</option>
+                            ${stages.map(s => `<option value="${s}" ${state.stage === s ? 'selected' : ''}>${s}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="view-toggles">
+                        <button class="view-btn ${state.view === 'board' ? 'active' : ''}" onclick="window.setView('board')">Board</button>
+                        <button class="view-btn ${state.view === 'list' ? 'active' : ''}" onclick="window.setView('list')">List</button>
+                        <button class="view-btn ${state.view === 'map' ? 'active' : ''}" onclick="window.setView('map')">Map</button>
+                    </div>
+                </div>
+                <div id="viewContainer" style="height: calc(100% - 60px);"></div>
+            `;
+
+            const viewContainer = document.getElementById('viewContainer');
+            
+            if (state.view === 'board') {
+                viewContainer.innerHTML = renderBoardView();
+            } else if (state.view === 'list') {
+                viewContainer.innerHTML = renderListView();
+            } else if (state.view === 'map') {
+                viewContainer.innerHTML = `<div id="map" class="map-container"></div>`;
+                // Initialize map after DOM paints
+                setTimeout(initMap, 100); 
+            }
+        };
+
+        // --- 5. COMPONENT RENDERERS ---
+        const renderBoardView = () => {
+            const filtered = getFilteredDeals();
+            let html = `<div class="board-container">`;
+            
+            stages.forEach(stage => {
+                const stageDeals = filtered.filter(d => d.stage === stage);
+                html += `
+                    <div class="board-column">
+                        <div class="column-header">
+                            <span>${stage}</span>
+                            <span class="badge-count">${stageDeals.length}</span>
+                        </div>
+                        <div class="column-body">
+                            ${stageDeals.map(deal => `
+                                <div class="deal-card" onclick="window.selectDeal('${deal.id}')">
+                                    <div class="deal-card-title">${deal.businessName}</div>
+                                    <div class="deal-card-client">${deal.merchantName} •${deal.industry}</div>
+                                    <div class="deal-card-footer">
+                                        <div class="deal-amount">${formatCurrency(deal.amountRequested)}</div>${getStageBadge(deal.stage)}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+            return html;
+        };
+
+        const renderListView = () => {
+            const filtered = getFilteredDeals();
+            let html = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Business</th>
+                                <th>Client</th>
+                                <th>Industry</th>
+                                <th>Amount</th>
+                                <th>Stage</th>
+                                <th>Next Action</th>
+                                <th>Due Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            filtered.forEach(deal => {
+                html += `
+                    <tr onclick="window.selectDeal('${deal.id}')">
+                        <td style="font-weight: 500;">${deal.businessName}</td>
+                        <td>${deal.merchantName}</td>
+                        <td>${deal.industry}</td>
+                        <td style="font-weight: 600; color: var(--accent-orange);">${formatCurrency(deal.amountRequested)}</td>
+                        <td>${getStageBadge(deal.stage)}</td>
+                        <td>${deal.nextAction}</td>
+                        <td>${deal.dueDate}</td>
+                    </tr>
+                `;
+            });
+            html += `</tbody></table></div>`;
+            return html;
+        };
+
+        const renderDetailView = (deal) => {
+            return `
+                <div class="detail-view">
+                    <div class="detail-panel detail-left">
+                        <button class="btn-back" onclick="window.clearSelection()">← Back to Pipeline</button>
+                        
+                        <div class="detail-header">
+                            <div class="detail-title">${deal.businessName}</div>
+                            <div style="color: var(--text-muted); margin-bottom: 1rem;">Client: ${deal.merchantName}</div>
+                            ${getStageBadge(deal.stage)}
+                        </div>
+
+                        <div class="detail-grid">
+                            <div class="info-group">
+                                <label>Industry</label>
+                                <div>${deal.industry}</div>
+                            </div>
+                            <div class="info-group">
+                                <label>Requested Amount</label>
+                                <div style="color: var(--accent-orange); font-size: 1.5rem; font-weight: 700;">${formatCurrency(deal.amountRequested)}</div>
+                            </div>
+                            <div class="info-group">
+                                <label>Next Action</label>
+                                <div>${deal.nextAction}</div>
+                            </div>
+                            <div class="info-group">
+                                <label>Due Date</label>
+                                <div>${deal.dueDate}</div>
+                            </div>
+                            <div class="info-group">
+                                <label>Last Contact</label>
+                                <div>${deal.lastContact}</div>
+                            </div>
+                            <div class="info-group">
+                                <label>System ID</label>
+                                <div>${deal.id}</div>
+                            </div>
+                        </div>
+
+                        <button class="btn-primary" onclick="window.triggerAlert()">Prepare Follow-up</button>
+                    </div>
+
+                    <div class="detail-panel detail-right">
+                        <h3 style="margin-bottom: 1.5rem;">Activity Timeline</h3>
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-date">Today</div>
+                                <div class="timeline-content">Viewed application details in DealRoom</div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-date">${deal.lastContact}</div>
+                                <div class="timeline-content">Last recorded communication with ${deal.merchantName}</div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-date">2024-05-15</div>
+                                <div class="timeline-content">Initial inquiry submitted for ${formatCurrency(deal.amountRequested)}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+        const initMap = () => {
+            // Guard clause if Leaflet fails to load or DOM element is missing
+            if (typeof L === 'undefined' || !document.getElementById('map')) return;
+
+            mapInstance = L.map('map').setView([39.8283, -98.5795], 4);
+            
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+                subdomains: 'abcd',
+                maxZoom: 20
+            }).addTo(mapInstance);
+
+            const markers = L.markerClusterGroup({
+                showCoverageOnHover: false,
+                spiderfyOnMaxZoom: true
+            });
+            
+            const filtered = getFilteredDeals();
+
+            filtered.forEach(deal => {
+                const color = stageColors[deal.stage] || "#94a3b8";
+                
+                const customIcon = L.divIcon({
+                    className: 'custom-marker',
+                    html: `<div style="background-color: ${color}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5);"></div>`,
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                });
+
+                const marker = L.marker([deal.lat, deal.lng], { icon: customIcon });
+                
+                const popupContent = `
+                    <div style="min-width: 150px; padding: 5px;">
+                        <h4 style="margin: 0 0 5px 0; color: #fff;">${deal.businessName}</h4>
+                        <p style="margin: 0 0 5px 0; font-weight: bold; color: var(--accent-orange);">${formatCurrency(deal.amountRequested)}</p>
+                        <p style="margin: 0 0 10px 0; font-size: 0.85rem; color: #aaa;">${deal.stage}</p>
+                        <button class="map-popup-btn" onclick="window.selectDeal('${deal.id}')">Open File</button>
+                    </div>
+                `;
+                
+                marker.bindPopup(popupContent);
+                markers.addLayer(marker);
+            });
+
+            mapInstance.addLayer(markers);
+        };
+
+        // --- 6. APP INITIALIZATION & FETCH ---
+        const fetchDeals = async () => {
+            /* 
+            // READY FOR GOOGLE SHEETS API INTEGRATION
+            try {
+                const response = await fetch('YOUR_GOOGLE_APPS_SCRIPT_URL');
+                const data = await response.json();
+                state.deals = data;
+                render();
+            } catch (error) {
+                console.error("Error fetching deals:", error);
+            }
+            */
+            
+            // Using mock data for current implementation
+            state.deals = initialData;
+            render();
+        };
+
+        const init = () => {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('en-US', options);
+            
+            // Kickoff data load and render
+            fetchDeals(); 
+        };
+
+        // Run when DOM is ready
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
