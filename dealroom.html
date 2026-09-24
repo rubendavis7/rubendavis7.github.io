@@ -211,6 +211,10 @@
             color: white;
         }
 
+        #viewContainer {
+            height: calc(100% - 60px);
+        }
+
         /* Board View (Kanban) */
         .board-container {
             display: flex;
@@ -511,6 +515,163 @@
             letter-spacing: 0.5px;
         }
 
+        /* Small screens: sidebar collapses into a top strip, panels stack */
+        @media (max-width: 900px) {
+            body {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                flex-direction: row;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.5rem 1rem;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .logo {
+                font-size: 1.2rem;
+                padding: 0 0.5rem 0 0;
+                white-space: nowrap;
+            }
+
+            .sidebar nav {
+                display: flex;
+                overflow-x: auto;
+                min-width: 0;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .nav-link {
+                padding: 0.6rem 0.75rem;
+                font-size: 0.9rem;
+                white-space: nowrap;
+                border-left: none;
+                border-bottom: 3px solid transparent;
+            }
+
+            .nav-link:hover, .nav-link.active {
+                border-bottom-color: var(--accent-orange);
+            }
+
+            .top-header {
+                height: auto;
+                flex-wrap: wrap;
+                gap: 0.75rem;
+                padding: 0.75rem 1rem;
+            }
+
+            .search-bar {
+                width: 100%;
+                order: 2;
+            }
+
+            .header-right {
+                width: 100%;
+                justify-content: space-between;
+                order: 1;
+            }
+
+            .content-area {
+                padding: 1rem;
+            }
+
+            .toolbar {
+                flex-wrap: wrap;
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+            }
+
+            .filters {
+                width: 100%;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .filter-select {
+                flex: 1 1 140px;
+                min-width: 0;
+            }
+
+            .view-toggles {
+                width: 100%;
+            }
+
+            .view-btn {
+                flex: 1;
+                padding: 0.6rem 0.5rem;
+            }
+
+            #viewContainer {
+                height: auto;
+            }
+
+            .board-container {
+                height: auto;
+                gap: 1rem;
+            }
+
+            .board-column {
+                min-width: 260px;
+                max-width: 260px;
+            }
+
+            .column-body {
+                overflow-y: visible;
+            }
+
+            .deal-card-footer {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .stage-badge {
+                white-space: nowrap;
+            }
+
+            .table-container {
+                max-height: none;
+            }
+
+            th, td {
+                padding: 0.75rem;
+                white-space: nowrap;
+            }
+
+            .map-container {
+                height: 60vh;
+                min-height: 320px;
+            }
+
+            .detail-view {
+                flex-direction: column;
+                height: auto;
+                gap: 1rem;
+            }
+
+            .detail-panel {
+                padding: 1.25rem;
+            }
+
+            .detail-title {
+                font-size: 1.5rem;
+                overflow-wrap: anywhere;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .date-display {
+                font-size: 0.8rem;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -534,7 +695,7 @@
     <div class="main-wrapper">
         <!-- Header -->
         <header class="top-header">
-            <input type="text" id="searchInput" class="search-bar" placeholder="Search business or merchant name..." onkeyup="window.handleSearch(event)">
+            <input type="text" id="searchInput" class="search-bar" placeholder="Search business or merchant name..." oninput="window.handleSearch(event)">
             <div class="header-right">
                 <div class="date-display" id="dateDisplay"></div>
                 <div class="avatar">DR</div>
@@ -582,6 +743,7 @@
         };
 
         let mapInstance = null;
+        let mapInitTimer = null;
 
         // --- 2. UTILITY FUNCTIONS ---
         const formatCurrency = (amount) => {
@@ -623,6 +785,10 @@
             const mainContent = document.getElementById('mainContent');
             
             // Clean up Leaflet map instance safely if switching views
+            if (mapInitTimer) {
+                clearTimeout(mapInitTimer);
+                mapInitTimer = null;
+            }
             if (mapInstance) {
                 mapInstance.remove();
                 mapInstance = null;
@@ -631,9 +797,12 @@
             // Detail View Mode
             if (state.selected) {
                 const deal = state.deals.find(d => d.id === state.selected);
-                mainContent.innerHTML = renderDetailView(deal);
-                return; // Exit render function early
-            } 
+                if (deal) {
+                    mainContent.innerHTML = renderDetailView(deal);
+                    return; // Exit render function early
+                }
+                state.selected = null; // Unknown ID: fall back to the dashboard
+            }
             
             // Dashboard Mode (Board/List/Map)
             mainContent.innerHTML = `
@@ -653,7 +822,7 @@
                         <button class="view-btn ${state.view === 'map' ? 'active' : ''}" onclick="window.setView('map')">Map</button>
                     </div>
                 </div>
-                <div id="viewContainer" style="height: calc(100% - 60px);"></div>
+                <div id="viewContainer"></div>
             `;
 
             const viewContainer = document.getElementById('viewContainer');
@@ -665,7 +834,7 @@
             } else if (state.view === 'map') {
                 viewContainer.innerHTML = `<div id="map" class="map-container"></div>`;
                 // Initialize map after DOM paints
-                setTimeout(initMap, 100); 
+                mapInitTimer = setTimeout(initMap, 100);
             }
         };
 
@@ -686,7 +855,7 @@
                             ${stageDeals.map(deal => `
                                 <div class="deal-card" onclick="window.selectDeal('${deal.id}')">
                                     <div class="deal-card-title">${deal.businessName}</div>
-                                    <div class="deal-card-client">${deal.merchantName} •${deal.industry}</div>
+                                    <div class="deal-card-client">${deal.merchantName} • ${deal.industry}</div>
                                     <div class="deal-card-footer">
                                         <div class="deal-amount">${formatCurrency(deal.amountRequested)}</div>${getStageBadge(deal.stage)}
                                     </div>
@@ -799,8 +968,9 @@
         };
 
         const initMap = () => {
-            // Guard clause if Leaflet fails to load or DOM element is missing
-            if (typeof L === 'undefined' || !document.getElementById('map')) return;
+            // Guard clause if Leaflet fails to load, DOM element is missing, or a map already exists
+            mapInitTimer = null;
+            if (mapInstance || typeof L === 'undefined' || !document.getElementById('map')) return;
 
             mapInstance = L.map('map').setView([39.8283, -98.5795], 4);
             
