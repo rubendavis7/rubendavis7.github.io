@@ -1,0 +1,12 @@
+{
+  "name": "bendavid-os",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ruben Davis's local AI command center for revenue-based funding deals. Runs on localhost only.",
+  "license": "UNLICENSED",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node server/server.js",
+    "test": "node --test test/app.test.js"
+  }
+}

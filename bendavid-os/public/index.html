@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BenDavid OS</title>
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <canvas id="galaxy" aria-hidden="true"></canvas>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <div>
+        <strong>BenDavid OS</strong>
+        <small>Delta Capital Group · local</small>
+      </div>
+    </div>
+    <nav class="views" role="tablist" aria-label="Views">
+      <button role="tab" id="tab-jarvis" aria-controls="view-jarvis" aria-selected="true" data-view="jarvis">Jarvis</button>
+      <button role="tab" id="tab-dashboard" aria-controls="view-dashboard" aria-selected="false" data-view="dashboard">Sales Dashboard</button>
+    </nav>
+    <div class="top-actions">
+      <ul class="integrations" id="integrations" aria-label="Integration status"></ul>
+      <button class="icon-btn" id="motion-toggle" type="button" aria-pressed="false" title="Pause or play background animation">Motion</button>
+    </div>
+  </header>
+
+  <div class="sample-banner" id="sample-banner" hidden>
+    <span><b>SAMPLE records are loaded.</b> They are fictional practice data, marked <span class="badge sample">SAMPLE</span>, and are excluded from exports, reports, and your vault.</span>
+    <button type="button" class="btn ghost small" data-action="remove-samples">Remove all samples</button>
+  </div>
+
+  <main id="main">
+    <!-- ================= JARVIS ================= -->
+    <section id="view-jarvis" class="view" role="tabpanel" aria-labelledby="tab-jarvis">
+      <div class="hero">
+        <div class="reactor" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
+        <div class="hero-text">
+          <p class="eyebrow" id="today-label"></p>
+          <h1 id="greeting">Good day, Ruben.</h1>
+          <p class="summary" id="summary">Loading your desk…</p>
+        </div>
+      </div>
+
+      <form class="command" id="command-form" autocomplete="off">
+        <label for="command-input" class="sr-only">Command</label>
+        <span class="prompt" aria-hidden="true">›</span>
+        <input id="command-input" type="text" placeholder="Try: plan my day · find bakery · follow up Derek · new client · pipeline">
+        <button class="btn primary" type="submit">Run</button>
+        <p class="command-note">Local commands only. AI execution is not connected.</p>
+      </form>
+
+      <div class="quick" role="group" aria-label="Quick commands">
+        <button class="quick-btn" type="button" data-action="plan"><span class="qi">◎</span><span>Plan My Day</span></button>
+        <button class="quick-btn" type="button" data-action="missing"><span class="qi">▤</span><span>Missing Statements</span></button>
+        <button class="quick-btn" type="button" data-action="pipeline"><span class="qi">⇶</span><span>Deal Pipeline</span></button>
+        <button class="quick-btn" type="button" data-action="followup"><span class="qi">✉</span><span>Prepare Follow-Up</span></button>
+      </div>
+
+      <section class="panel console" id="console" aria-live="polite" hidden>
+        <header><h2 id="console-title">Output</h2><button class="icon-btn" type="button" data-action="close-console" aria-label="Close output">✕</button></header>
+        <div id="console-body"></div>
+      </section>
+
+      <div class="grid jarvis-grid">
+        <section class="panel">
+          <header><h2>Today's Priorities</h2><span class="count" id="prio-count"></span></header>
+          <ol class="list prio" id="priorities"></ol>
+        </section>
+        <section class="panel">
+          <header><h2>Tasks</h2><span class="count" id="task-count"></span></header>
+          <form class="inline-form" id="quick-task-form">
+            <label for="quick-task" class="sr-only">New task</label>
+            <input id="quick-task" type="text" placeholder="Add a task for today…" maxlength="300">
+            <button class="btn small" type="submit">Add</button>
+          </form>
+          <ul class="list tasks" id="jarvis-tasks"></ul>
+        </section>
+        <section class="panel">
+          <header><h2>Client Search</h2></header>
+          <label for="jarvis-search" class="sr-only">Search clients</label>
+          <input id="jarvis-search" class="search" type="search" placeholder="Name, business, email, phone…">
+          <ul class="list results" id="jarvis-results"></ul>
+        </section>
+        <section class="panel">
+          <header><h2>Recent Activity</h2></header>
+          <ul class="list activity" id="activity"></ul>
+        </section>
+      </div>
+    </section>
+
+    <!-- ================= DASHBOARD ================= -->
+    <section id="view-dashboard" class="view" role="tabpanel" aria-labelledby="tab-dashboard" hidden>
+      <div class="dash-head">
+        <h1>Sales Dashboard</h1>
+        <div class="dash-actions">
+          <button class="btn primary" type="button" data-action="new-client">+ New client</button>
+          <button class="btn" type="button" data-action="plan">Plan My Day</button>
+          <button class="btn" type="button" data-action="missing">Missing Statements</button>
+          <button class="btn" type="button" data-action="followup">Prepare Follow-Up</button>
+        </div>
+      </div>
+
+      <div class="kpis" id="kpis"></div>
+
+      <section class="panel">
+        <header>
+          <h2 id="pipeline-heading">Deal Pipeline</h2>
+          <label class="check"><input type="checkbox" id="show-samples" checked> Show samples</label>
+        </header>
+        <div class="pipeline" id="pipeline" aria-labelledby="pipeline-heading"></div>
+      </section>
+
+      <div class="grid dash-grid">
+        <section class="panel">
+          <header><h2>Clients</h2><span class="count" id="client-count"></span></header>
+          <div class="filters">
+            <label for="client-filter" class="sr-only">Search clients</label>
+            <input id="client-filter" class="search" type="search" placeholder="Search clients…">
+            <label for="stage-filter" class="sr-only">Filter by stage</label>
+            <select id="stage-filter"><option value="">All stages</option></select>
+          </div>
+          <div class="table-wrap">
+            <table class="clients">
+              <thead><tr><th>Business</th><th>Stage</th><th>Follow-up</th><th>Next action</th></tr></thead>
+              <tbody id="client-rows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <header><h2>All Tasks</h2><label class="check"><input type="checkbox" id="show-done"> Show completed</label></header>
+          <form class="task-form" id="task-form">
+            <label for="task-title" class="sr-only">Task</label>
+            <input id="task-title" type="text" placeholder="Task…" maxlength="300" required>
+            <label for="task-due" class="sr-only">Due date</label>
+            <input id="task-due" type="date">
+            <label for="task-client" class="sr-only">Client</label>
+            <select id="task-client"><option value="">No client</option></select>
+            <button class="btn small" type="submit">Add task</button>
+          </form>
+          <ul class="list tasks" id="dash-tasks"></ul>
+        </section>
+      </div>
+
+      <section class="panel data-panel">
+        <header><h2>Data, Export &amp; Backup</h2></header>
+        <div class="data-grid">
+          <div>
+            <p>Your records live in one file on this computer:</p>
+            <code id="data-path"></code>
+            <p>Automatic daily backups are kept in <code id="backup-path"></code> (last 14 days).</p>
+          </div>
+          <div class="data-actions">
+            <button class="btn" type="button" data-action="backup">Back up now</button>
+            <a class="btn" href="/api/export?format=json" download>Export JSON</a>
+            <a class="btn" href="/api/export?format=csv" download>Export CSV (Excel)</a>
+            <button class="btn" type="button" data-action="daily-report">Save daily report to vault</button>
+            <button class="btn ghost" type="button" data-action="load-samples" id="load-samples">Load sample records</button>
+          </div>
+        </div>
+        <p class="muted small">Exports contain real clients only. Copy backups to OneDrive or a USB drive regularly. See README.md for restore steps.</p>
+      </section>
+    </section>
+  </main>
+
+  <!-- Client editor -->
+  <dialog id="client-dialog" aria-labelledby="client-dialog-title">
+    <form id="client-form" method="dialog" novalidate>
+      <header class="dialog-head">
+        <h2 id="client-dialog-title">Client</h2>
+        <button class="icon-btn" type="button" data-action="close-dialog" aria-label="Close">✕</button>
+      </header>
+      <div class="dialog-body">
+        <p class="form-error" id="client-error" role="alert" hidden></p>
+        <fieldset>
+          <legend>Contact</legend>
+          <div class="fields">
+            <label>Contact name *<input name="contactName" required maxlength="120"></label>
+            <label>Business name *<input name="businessName" required maxlength="160"></label>
+            <label>Email<input name="email" type="email" maxlength="200"></label>
+            <label>Phone<input name="phone" type="tel" maxlength="40"></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Deal</legend>
+          <div class="fields">
+            <label>Stage<select name="stage" id="stage-select"></select></label>
+            <label>Last contact<input name="lastContact" type="date"></label>
+            <label>Next follow-up<input name="followUpDate" type="date"></label>
+            <label class="wide">Next action<input name="nextAction" maxlength="300"></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Requested documents</legend>
+          <ul class="docs" id="doc-list"></ul>
+          <div class="inline-form">
+            <label for="new-doc" class="sr-only">Add document</label>
+            <input id="new-doc" list="doc-suggestions" placeholder="Add a document to request…" maxlength="120">
+            <datalist id="doc-suggestions">
+              <option value="Business bank statements (last 4 months)"></option>
+              <option value="Month-to-date statement"></option>
+              <option value="Signed application"></option>
+              <option value="Driver's license"></option>
+              <option value="Voided business check"></option>
+              <option value="Proof of business ownership"></option>
+            </datalist>
+            <button class="btn small" type="button" data-action="add-doc">Add</button>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Offer details</legend>
+          <label class="check"><input type="checkbox" name="offer.confirmed"> Offer confirmed by funder (only confirmed numbers appear in drafts)</label>
+          <div class="fields">
+            <label>Funder<input name="offer.funder" maxlength="120"></label>
+            <label>Funding amount ($)<input name="offer.advanceAmount" inputmode="decimal"></label>
+            <label>Total payback ($)<input name="offer.paybackAmount" inputmode="decimal"></label>
+            <label>Factor rate<input name="offer.factorRate" inputmode="decimal" placeholder="e.g. 1.35"></label>
+            <label>Remittance amount ($)<input name="offer.paymentAmount" inputmode="decimal"></label>
+            <label>Remittance frequency
+              <select name="offer.paymentFrequency"><option value="">—</option><option>Daily</option><option>Weekly</option><option>Bi-weekly</option><option>Monthly</option></select>
+            </label>
+            <label>Estimated term<input name="offer.estimatedTerm" maxlength="60" placeholder="e.g. About 7 months"></label>
+            <label class="wide">Offer notes<input name="offer.notes" maxlength="1000"></label>
+          </div>
+        </fieldset>
+        <fieldset id="notes-fieldset">
+          <legend>Notes</legend>
+          <div class="inline-form">
+            <label for="new-note" class="sr-only">New note</label>
+            <textarea id="new-note" rows="2" placeholder="Add a note (saved right away)…" maxlength="4000"></textarea>
+            <button class="btn small" type="button" data-action="add-note">Add note</button>
+          </div>
+          <ul class="list notes" id="note-list"></ul>
+        </fieldset>
+      </div>
+      <footer class="dialog-foot">
+        <button class="btn danger ghost" type="button" data-action="delete-client" id="delete-client">Delete</button>
+        <span class="spacer"></span>
+        <button class="btn" type="button" data-action="dialog-followup" id="dialog-followup">Prepare Follow-Up</button>
+        <button class="btn" type="button" data-action="close-dialog">Cancel</button>
+        <button class="btn primary" type="submit" id="save-client">Save client</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- Draft viewer -->
+  <dialog id="draft-dialog" aria-labelledby="draft-title">
+    <div class="dialog-head">
+      <h2 id="draft-title">Follow-Up Draft</h2>
+      <button class="icon-btn" type="button" data-action="close-draft" aria-label="Close">✕</button>
+    </div>
+    <div class="dialog-body" id="draft-body"></div>
+    <footer class="dialog-foot">
+      <span class="muted small">Gmail is not connected. Copy this into your email app, review it, and send it yourself.</span>
+      <span class="spacer"></span>
+      <button class="btn primary" type="button" data-action="copy-draft">Copy draft</button>
+    </footer>
+  </dialog>
+
+  <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+
+  <script src="galaxy.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

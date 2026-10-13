@@ -1,0 +1,11 @@
+# Real client data and backups never go into git (this repo is public).
+data/
+exports/
+.env
+# Generated vault content contains client details.
+vault/Clients/*
+!vault/Clients/README.md
+vault/Daily Reports/*
+!vault/Daily Reports/README.md
+vault/.obsidian/workspace*.json
+node_modules/
