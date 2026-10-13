@@ -1,20 +1,22 @@
 'use strict';
-// BenDavid OS data store.
-// One JSON file (data/bendavid-os.json) is the single authoritative source for
-// clients, tasks, and activity. Writes are atomic (temp file + rename) and every
-// record carries a `rev` number so a stale edit can never silently overwrite a
-// newer one (the API answers 409 instead).
+// BenDavid OS data store: the single authoritative database.
+// One JSON file (data/bendavid-os.json) holds clients, tasks, activity, workflow
+// runs, imported-source metadata, and settings. Writes are atomic (temp file +
+// rename) and every client/task carries a `rev` number, so a stale edit can
+// never silently overwrite a newer one (the API answers 409 instead).
+// Markdown files in the vault are derived views of this data, never the source.
 
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { buildSamples } = require('./samples');
+const { DEFAULT_WORKSPACE, getWorkspace } = require('./workspaces');
+const { isMonth, monthLabel, monthsBefore } = require('./time');
 
-const STAGES = ['Statements', 'Offer', 'Accepted', 'Contract', 'Bank Verification', 'Funding Call', 'Funded'];
-const DEFAULT_DOCS = ['Business bank statements (last 4 months)', 'Signed application'];
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 const MAX_ACTIVITY = 500;
+const MAX_RUNS = 500;
 const AUTO_BACKUPS_KEPT = 14;
+const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri'];
 
 class HttpError extends Error {
   constructor(status, message, extra) {
@@ -24,19 +26,27 @@ class HttpError extends Error {
   }
 }
 
-function todayISO(d = new Date()) {
-  const z = (n) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`;
-}
-
 function newId(prefix) {
   return `${prefix}_${crypto.randomBytes(6).toString('hex')}`;
+}
+
+function defaultSettings() {
+  return {
+    // Future scheduled execution. Every schedule starts DISABLED.
+    schedules: [
+      { workflowId: 'plan-my-day', enabled: false, time: '07:45', days: [...WEEKDAYS], lastFiredDate: '', lastRunId: '' },
+      { workflowId: 'find-missing-statements', enabled: false, time: '09:00', days: [...WEEKDAYS], lastFiredDate: '', lastRunId: '' },
+      { workflowId: 'review-pipeline', enabled: false, time: '16:00', days: ['fri'], lastFiredDate: '', lastRunId: '' },
+    ],
+    voice: { transcription: 'none', speech: 'none', verified: {} },
+    connectionTests: {},
+  };
 }
 
 // ---------- field sanitizers ----------
 function str(v, max = 500) {
   if (v === undefined || v === null) return '';
-  return String(v).replace(/\s+$/g, '').replace(/^\s+/g, '').slice(0, max);
+  return String(v).trim().slice(0, max);
 }
 function date(v, field) {
   const s = str(v, 10);
@@ -57,67 +67,98 @@ function money(v, field) {
   if (!Number.isFinite(n) || n < 0) throw new HttpError(400, `${field} must be a positive number`);
   return Math.round(n * 100) / 100;
 }
-function stage(v) {
-  const s = str(v, 40);
-  if (!STAGES.includes(s)) throw new HttpError(400, `Stage must be one of: ${STAGES.join(', ')}`);
-  return s;
-}
-function docs(list) {
+function docs(list, today) {
   if (!Array.isArray(list)) throw new HttpError(400, 'requestedDocs must be a list');
-  return list
-    .map((d) => (typeof d === 'string' ? { name: d } : d || {}))
-    .filter((d) => str(d.name, 120))
-    .slice(0, 40)
-    .map((d) => ({
-      id: typeof d.id === 'string' && d.id ? d.id.slice(0, 40) : newId('doc'),
-      name: str(d.name, 120),
-      received: Boolean(d.received),
-      requestedAt: date(d.requestedAt, 'requestedAt') || todayISO(),
-      receivedAt: d.received ? date(d.receivedAt, 'receivedAt') || todayISO() : '',
-    }));
+  const seenMonths = new Set();
+  const out = [];
+  for (const raw of list.slice(0, 60)) {
+    const d = typeof raw === 'string' ? { name: raw } : raw || {};
+    if (d.month !== undefined && d.month !== '' && !isMonth(d.month)) {
+      throw new HttpError(400, 'Statement month must look like 2026-07');
+    }
+    const month = isMonth(d.month) ? d.month : '';
+    if (month) {
+      if (seenMonths.has(month)) continue;
+      seenMonths.add(month);
+    }
+    const name = str(d.name, 120) || (month ? `Bank statement: ${monthLabel(month)}` : '');
+    if (!name) continue;
+    const kind = month || d.kind === 'bank-statement' || (d.kind !== 'document' && /statement/i.test(name)) ? 'bank-statement' : 'document';
+    const received = Boolean(d.received);
+    out.push({
+      id: typeof d.id === 'string' && /^[\w-]{1,40}$/.test(d.id) ? d.id : newId('doc'),
+      name, kind, month, received,
+      requestedAt: date(d.requestedAt, 'requestedAt') || today,
+      receivedAt: received ? date(d.receivedAt, 'receivedAt') || today : '',
+    });
+  }
+  return out;
 }
 function offer(o) {
   o = o || {};
   return {
     confirmed: Boolean(o.confirmed),
     funder: str(o.funder, 120),
-    advanceAmount: money(o.advanceAmount, 'Advance amount'),
+    advanceAmount: money(o.advanceAmount, 'Funding amount'),
     paybackAmount: money(o.paybackAmount, 'Payback amount'),
     factorRate: money(o.factorRate, 'Factor rate'),
-    paymentAmount: money(o.paymentAmount, 'Payment amount'),
+    paymentAmount: money(o.paymentAmount, 'Remittance amount'),
     paymentFrequency: ['', 'Daily', 'Weekly', 'Bi-weekly', 'Monthly'].includes(o.paymentFrequency) ? o.paymentFrequency : '',
     estimatedTerm: str(o.estimatedTerm, 60),
     notes: str(o.notes, 1000),
   };
 }
 
-const CLIENT_FIELDS = {
-  contactName: (v) => str(v, 120),
-  businessName: (v) => str(v, 160),
-  email,
-  phone: (v) => str(v, 40),
-  stage,
-  requestedDocs: docs,
-  offer,
-  lastContact: (v) => date(v, 'Last contact'),
-  followUpDate: (v) => date(v, 'Follow-up date'),
-  nextAction: (v) => str(v, 300),
-};
+// ---------- schema migrations ----------
+// v1 (first release) -> v2: workspaces, statement months, stage timestamps,
+// workflow runs, imported sources, settings. Nothing is removed.
+function migrate(data, { now }) {
+  const from = data.schemaVersion || 1;
+  if (from > SCHEMA_VERSION) {
+    throw new Error(`Data file was written by a newer BenDavid OS (schema ${from}). Update the app; nothing was changed.`);
+  }
+  if (from >= SCHEMA_VERSION) return null;
+  for (const k of ['clients', 'tasks', 'activity']) if (!Array.isArray(data[k])) data[k] = [];
+  for (const c of data.clients) {
+    c.workspaceId = c.workspaceId || DEFAULT_WORKSPACE;
+    c.stageChangedAt = c.stageChangedAt || c.updatedAt || c.createdAt || now;
+    c.notes = Array.isArray(c.notes) ? c.notes : [];
+    c.requestedDocs = (c.requestedDocs || []).map((d) => ({
+      ...d,
+      kind: d.kind || (/statement/i.test(d.name || '') ? 'bank-statement' : 'document'),
+      month: d.month || '',
+    }));
+  }
+  for (const t of data.tasks) t.workspaceId = t.workspaceId || DEFAULT_WORKSPACE;
+  data.runs = Array.isArray(data.runs) ? data.runs : [];
+  data.rawSources = Array.isArray(data.rawSources) ? data.rawSources : [];
+  data.settings = { ...defaultSettings(), ...(data.settings || {}) };
+  data.migrations = [...(data.migrations || []), { from, to: SCHEMA_VERSION, at: now }];
+  data.schemaVersion = SCHEMA_VERSION;
+  return { from, to: SCHEMA_VERSION };
+}
 
 class Store {
-  constructor({ dataDir, seedSamples = true }) {
+  constructor({ dataDir, clock, seedSamples = true }) {
     this.dataDir = dataDir;
+    this.clock = clock;
     this.file = path.join(dataDir, 'bendavid-os.json');
     this.backupDir = path.join(dataDir, 'backups');
     this.seedSamples = seedSamples;
     this.listeners = [];
+    this.migration = null;
     this.load();
   }
+
+  today() { return this.clock.today(); }
 
   load() {
     fs.mkdirSync(this.backupDir, { recursive: true });
     if (!fs.existsSync(this.file)) {
-      this.data = { schemaVersion: SCHEMA_VERSION, createdAt: new Date().toISOString(), clients: [], tasks: [], activity: [] };
+      this.data = {
+        schemaVersion: SCHEMA_VERSION, createdAt: new Date().toISOString(),
+        clients: [], tasks: [], activity: [], runs: [], rawSources: [], settings: defaultSettings(),
+      };
       if (this.seedSamples) this.loadSamples(false);
       this.persist();
       return;
@@ -130,7 +171,18 @@ class Store {
       throw new Error(`Data file ${this.file} is not valid JSON (${err.message}). ` +
         'Restore a copy from data/backups/ and restart. Nothing was overwritten.');
     }
-    for (const k of ['clients', 'tasks', 'activity']) if (!Array.isArray(this.data[k])) this.data[k] = [];
+    const before = this.data.schemaVersion || 1;
+    if (before < SCHEMA_VERSION) {
+      // Keep an untouched copy of the old file before upgrading it.
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      this.preMigrationBackup = path.join(this.backupDir, `pre-migration-v${before}-${stamp}.json`);
+      fs.writeFileSync(this.preMigrationBackup, raw);
+    }
+    this.migration = migrate(this.data, { now: new Date().toISOString() });
+    if (this.migration) {
+      this.log('system', `Upgraded data file from schema v${this.migration.from} to v${this.migration.to}. Backup: ${path.basename(this.preMigrationBackup)}`);
+      this.persist();
+    }
   }
 
   onChange(fn) { this.listeners.push(fn); }
@@ -145,7 +197,7 @@ class Store {
 
   autoBackup() {
     if (!fs.existsSync(this.file)) return;
-    const target = path.join(this.backupDir, `auto-${todayISO()}.json`);
+    const target = path.join(this.backupDir, `auto-${this.today()}.json`);
     if (fs.existsSync(target)) return;
     fs.copyFileSync(this.file, target);
     const autos = fs.readdirSync(this.backupDir).filter((f) => /^auto-\d{4}-\d{2}-\d{2}\.json$/.test(f)).sort();
@@ -171,6 +223,8 @@ class Store {
     this.data.activity.length = Math.min(this.data.activity.length, MAX_ACTIVITY);
   }
 
+  workspaceFor(record) { return getWorkspace(record.workspaceId || DEFAULT_WORKSPACE); }
+
   // ---------- clients ----------
   getClient(id) {
     const c = this.data.clients.find((x) => x.id === id);
@@ -185,22 +239,43 @@ class Store {
     }
   }
 
+  clientFields(ws) {
+    const today = this.today();
+    return {
+      contactName: (v) => str(v, 120),
+      businessName: (v) => str(v, 160),
+      email,
+      phone: (v) => str(v, 40),
+      stage: (v) => {
+        const s = str(v, 40);
+        if (!ws.stages.includes(s)) throw new HttpError(400, `Stage must be one of: ${ws.stages.join(', ')}`);
+        return s;
+      },
+      requestedDocs: (v) => docs(v, today),
+      offer,
+      lastContact: (v) => date(v, 'Last contact'),
+      followUpDate: (v) => date(v, 'Follow-up date'),
+      nextAction: (v) => str(v, 300),
+    };
+  }
+
   createClient(input, { sample = false } = {}) {
+    const isSample = sample || input.sample === true;
+    const ws = getWorkspace(input.workspaceId || DEFAULT_WORKSPACE);
+    const now = new Date().toISOString();
+    const defaultMonths = monthsBefore(this.today(), ws.defaultStatementMonths).map((month) => ({ kind: 'bank-statement', month }));
     const c = {
-      id: newId(sample ? 'sample' : 'cli'),
-      rev: 1,
-      sample,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      contactName: '', businessName: '', email: '', phone: '', stage: STAGES[0],
-      requestedDocs: docs(DEFAULT_DOCS), offer: offer({}),
+      id: newId(isSample ? 'sample' : 'cli'), rev: 1, sample: isSample, workspaceId: ws.id,
+      createdAt: now, updatedAt: now, stageChangedAt: now,
+      contactName: '', businessName: '', email: '', phone: '', stage: ws.stages[0],
+      requestedDocs: docs([...defaultMonths, ...ws.defaultDocs], this.today()), offer: offer({}),
       lastContact: '', followUpDate: '', nextAction: 'Request bank statements', notes: [],
     };
-    for (const [k, fn] of Object.entries(CLIENT_FIELDS)) if (input[k] !== undefined) c[k] = fn(input[k]);
+    for (const [k, fn] of Object.entries(this.clientFields(ws))) if (input[k] !== undefined) c[k] = fn(input[k]);
     if (!c.contactName) throw new HttpError(400, 'Contact name is required');
     if (!c.businessName) throw new HttpError(400, 'Business name is required');
     this.data.clients.push(c);
-    this.log('client', `Added client ${c.businessName} (${c.contactName})`, c.id, sample);
+    this.log('client', `Added ${isSample ? 'SAMPLE ' : ''}client ${c.businessName} (${c.contactName})`, c.id, isSample);
     if (!sample) this.commit({ client: c });
     return c;
   }
@@ -211,13 +286,14 @@ class Store {
     const before = c.stage;
     // Validate everything first so a bad field never leaves a half-applied edit.
     const next = {};
-    for (const [k, fn] of Object.entries(CLIENT_FIELDS)) if (input[k] !== undefined) next[k] = fn(input[k]);
+    for (const [k, fn] of Object.entries(this.clientFields(this.workspaceFor(c)))) if (input[k] !== undefined) next[k] = fn(input[k]);
     if ((next.contactName ?? c.contactName) === '' || (next.businessName ?? c.businessName) === '') {
       throw new HttpError(400, 'Contact name and business name are required');
     }
     Object.assign(c, next);
     c.rev += 1;
     c.updatedAt = new Date().toISOString();
+    if (before !== c.stage) c.stageChangedAt = c.updatedAt;
     this.log('client', before !== c.stage ? `Updated ${c.businessName}; stage ${before} → ${c.stage}` : `Updated ${c.businessName}`, c.id, c.sample);
     this.commit({ client: c });
     return c;
@@ -226,12 +302,13 @@ class Store {
   moveStage(id, { stage: to, rev }) {
     const c = this.getClient(id);
     this.checkRev(c, rev);
-    const target = stage(to);
+    const target = this.clientFields(this.workspaceFor(c)).stage(to);
     if (target === c.stage) return c;
     const from = c.stage;
     c.stage = target;
     c.rev += 1;
     c.updatedAt = new Date().toISOString();
+    c.stageChangedAt = c.updatedAt;
     this.log('stage', `${c.businessName}: ${from} → ${target}`, c.id, c.sample);
     this.commit({ client: c });
     return c;
@@ -269,14 +346,16 @@ class Store {
     const title = str(input.title, 300);
     if (!title) throw new HttpError(400, 'Task title is required');
     const clientId = input.clientId ? str(input.clientId, 40) : null;
-    if (clientId) this.getClient(clientId);
+    const client = clientId ? this.getClient(clientId) : null;
+    const isSample = sample || Boolean(client && client.sample);
     const t = {
-      id: newId(sample ? 'sample' : 'task'), rev: 1, sample, title, clientId,
+      id: newId(isSample ? 'sample' : 'task'), rev: 1, sample: isSample, title, clientId,
+      workspaceId: client ? client.workspaceId : DEFAULT_WORKSPACE,
       due: date(input.due, 'Due date'), done: false, doneAt: '',
       createdAt: new Date().toISOString(),
     };
     this.data.tasks.push(t);
-    this.log('task', `Task added: ${title}`, clientId, sample);
+    this.log('task', `Task added: ${title}`, clientId, isSample);
     if (!sample) this.commit({ task: t });
     return t;
   }
@@ -284,11 +363,13 @@ class Store {
   updateTask(id, input) {
     const t = this.getTask(id);
     this.checkRev(t, input.rev);
+    const next = {};
     if (input.title !== undefined) {
-      t.title = str(input.title, 300);
-      if (!t.title) throw new HttpError(400, 'Task title is required');
+      next.title = str(input.title, 300);
+      if (!next.title) throw new HttpError(400, 'Task title is required');
     }
-    if (input.due !== undefined) t.due = date(input.due, 'Due date');
+    if (input.due !== undefined) next.due = date(input.due, 'Due date');
+    Object.assign(t, next);
     if (input.done !== undefined && Boolean(input.done) !== t.done) {
       t.done = Boolean(input.done);
       t.doneAt = t.done ? new Date().toISOString() : '';
@@ -307,10 +388,38 @@ class Store {
     this.commit({ deletedTask: t });
   }
 
+  // ---------- workflow runs (task queue history) ----------
+  saveRun(run) {
+    const i = this.data.runs.findIndex((r) => r.id === run.id);
+    const copy = JSON.parse(JSON.stringify(run));
+    if (i >= 0) this.data.runs[i] = copy;
+    else this.data.runs.unshift(copy);
+    if (this.data.runs.length > MAX_RUNS) this.data.runs.length = MAX_RUNS;
+    this.persist();
+  }
+
+  // ---------- imported sources (raw/) ----------
+  addRawSource(meta) {
+    const rec = { id: newId('src'), importedAt: new Date().toISOString(), ...meta };
+    this.data.rawSources.unshift(rec);
+    this.log('knowledge', `Imported ${rec.kind || 'source'} into ${rec.path}`, rec.clientId || null);
+    this.commit({ rawSource: rec });
+    return rec;
+  }
+
+  // ---------- settings ----------
+  updateSettings(mutator, logText) {
+    mutator(this.data.settings);
+    if (logText) this.log('system', logText);
+    this.commit({ settings: true });
+    return this.data.settings;
+  }
+
   // ---------- sample records ----------
   loadSamples(commit = true) {
     if (this.data.clients.some((c) => c.sample)) throw new HttpError(409, 'Sample records are already loaded');
-    const { clients, tasks } = buildSamples(new Date());
+    const { buildSamples } = require('./workspaces/delta-capital/samples');
+    const { clients, tasks } = buildSamples(this.today());
     const idMap = {};
     for (const s of clients) {
       const { key, notes, ...fields } = s;
@@ -324,13 +433,13 @@ class Store {
   }
 
   removeSamples() {
-    const n = this.data.clients.filter((c) => c.sample).length;
+    const removed = this.data.clients.filter((c) => c.sample);
     this.data.clients = this.data.clients.filter((c) => !c.sample);
     this.data.tasks = this.data.tasks.filter((t) => !t.sample);
     this.data.activity = this.data.activity.filter((a) => !a.sample);
-    this.log('system', `Removed ${n} sample client record(s)`);
-    this.commit({ samples: false });
-    return n;
+    this.log('system', `Removed ${removed.length} sample client record(s)`);
+    this.commit({ samples: false, removedSamples: removed });
+    return removed.length;
   }
 
   snapshot({ includeSamples = true } = {}) {
@@ -341,8 +450,10 @@ class Store {
       clients: this.data.clients.filter(keep),
       tasks: this.data.tasks.filter(keep),
       activity: this.data.activity.filter(keep),
+      runs: this.data.runs.filter((r) => includeSamples || !r.containsSamples),
+      rawSources: this.data.rawSources,
     };
   }
 }
 
-module.exports = { Store, STAGES, HttpError, todayISO, newId };
+module.exports = { Store, HttpError, newId, SCHEMA_VERSION, defaultSettings, migrate };

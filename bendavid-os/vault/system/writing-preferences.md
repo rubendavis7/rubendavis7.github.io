@@ -1,8 +1,8 @@
 ---
 type: writing-preferences
-applies_to: all client drafts, templates and future AI drafts
+applies_to: all client drafts, templates, and AI drafts
 ---
-# Writing Preferences
+# Writing preferences
 
 ## Voice
 - Short, direct, confident, natural.
@@ -34,5 +34,14 @@ The product is **not a loan** and its cost is **not interest**.
 > Following up on the offer for Chen Auto Repair: $50,000 in funding, $67,500 total payback, $450 daily remittance.
 >
 > Want to move forward? Reply yes and I'll prepare the next step.
+>
+> Ruben
+
+## Example (Statements stage, months outstanding)
+> Hi Maria,
+>
+> To move Sunrise Bakery forward I still need your business bank statements for July, August and September 2026.
+>
+> Can you reply with those attached? Once I have them, I'll get your file in front of funders.
 >
 > Ruben

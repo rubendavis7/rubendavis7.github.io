@@ -1,11 +1,19 @@
-# Real client data and backups never go into git (this repo is public).
+# Real client data, run folders, backups, and the local API token never go
+# into git (this repository is public).
 data/
 exports/
 .env
-# Generated vault content contains client details.
-vault/Clients/*
-!vault/Clients/README.md
-vault/Daily Reports/*
-!vault/Daily Reports/README.md
-vault/.obsidian/workspace*.json
 node_modules/
+
+# Vault content that is generated or may contain client details.
+vault/index.md
+vault/*/index.md
+vault/raw/
+vault/wiki/
+vault/output/
+vault/daily-notes/
+vault/system/workflow-registry.md
+vault/system/migration-log.md
+vault/**/*.generated.md
+vault/.obsidian/
+vault/.trash/

@@ -8,7 +8,7 @@
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="app.css">
 </head>
-<body>
+<body data-jarvis="idle">
   <canvas id="galaxy" aria-hidden="true"></canvas>
   <a class="skip" href="#main">Skip to content</a>
 
@@ -17,42 +17,49 @@
       <span class="brand-mark" aria-hidden="true"></span>
       <div>
         <strong>BenDavid OS</strong>
-        <small>Delta Capital Group · local</small>
+        <small id="workspace-label">Delta Capital · local</small>
       </div>
     </div>
-    <nav class="views" role="tablist" aria-label="Views">
-      <button role="tab" id="tab-jarvis" aria-controls="view-jarvis" aria-selected="true" data-view="jarvis">Jarvis</button>
-      <button role="tab" id="tab-dashboard" aria-controls="view-dashboard" aria-selected="false" data-view="dashboard">Sales Dashboard</button>
+    <nav class="views" aria-label="Pages">
+      <a href="#/jarvis" data-view="jarvis">Jarvis</a>
+      <a href="#/dashboard" data-view="dashboard">Dashboard</a>
+      <a href="#/workflows" data-view="workflows">Workflows</a>
+      <a href="#/runs" data-view="runs">Run History</a>
+      <a href="#/knowledge" data-view="knowledge">Knowledge</a>
+      <a href="#/connections" data-view="connections">Connections</a>
     </nav>
     <div class="top-actions">
-      <ul class="integrations" id="integrations" aria-label="Integration status"></ul>
+      <span class="state-pill" id="state-pill" role="status" aria-live="polite"><span class="dot"></span><span id="state-pill-text">Idle</span></span>
+      <ul class="integrations" id="integrations" aria-label="Connection status"></ul>
       <button class="icon-btn" id="motion-toggle" type="button" aria-pressed="false" title="Pause or play background animation">Motion</button>
     </div>
   </header>
 
   <div class="sample-banner" id="sample-banner" hidden>
-    <span><b>SAMPLE records are loaded.</b> They are fictional practice data, marked <span class="badge sample">SAMPLE</span>, and are excluded from exports, reports, and your vault.</span>
+    <span><b>SAMPLE records are loaded.</b> They are fictional practice data, marked <span class="badge sample">SAMPLE</span>, excluded from exports, daily notes, and the wiki, and labelled SAMPLE in any output.</span>
     <button type="button" class="btn ghost small" data-action="remove-samples">Remove all samples</button>
   </div>
 
   <main id="main">
     <!-- ================= JARVIS ================= -->
-    <section id="view-jarvis" class="view" role="tabpanel" aria-labelledby="tab-jarvis">
+    <section id="view-jarvis" class="view" aria-labelledby="greeting">
       <div class="hero">
-        <div class="reactor" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
+        <div class="reactor" id="reactor" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
         <div class="hero-text">
           <p class="eyebrow" id="today-label"></p>
           <h1 id="greeting">Good day, Ruben.</h1>
           <p class="summary" id="summary">Loading your desk…</p>
+          <p class="state-line" id="state-line"><span class="state-tag" id="state-tag">Idle</span> <span id="state-detail">Ready.</span> <button type="button" class="linkish small" id="state-dismiss" data-action="dismiss-error" hidden>Dismiss</button></p>
         </div>
       </div>
 
       <form class="command" id="command-form" autocomplete="off">
         <label for="command-input" class="sr-only">Command</label>
         <span class="prompt" aria-hidden="true">›</span>
-        <input id="command-input" type="text" placeholder="Try: plan my day · find bakery · follow up Derek · new client · pipeline">
+        <input id="command-input" type="text" maxlength="300" placeholder="Try: plan my day · missing statements · follow up Derek · summarize Maria · review pipeline">
+        <button class="icon-btn mic" id="mic-btn" type="button" data-action="listen" aria-label="Speak a command" disabled title="Voice is unavailable: not configured (see Connections)">🎙</button>
         <button class="btn primary" type="submit">Run</button>
-        <p class="command-note">Local commands only. AI execution is not connected.</p>
+        <p class="command-note" id="command-note">Rule-based routing (no AI needed). Anything that would use the AI service or Claude Code asks you first. Voice: unavailable.</p>
       </form>
 
       <div class="quick" role="group" aria-label="Quick commands">
@@ -60,10 +67,12 @@
         <button class="quick-btn" type="button" data-action="missing"><span class="qi">▤</span><span>Missing Statements</span></button>
         <button class="quick-btn" type="button" data-action="pipeline"><span class="qi">⇶</span><span>Deal Pipeline</span></button>
         <button class="quick-btn" type="button" data-action="followup"><span class="qi">✉</span><span>Prepare Follow-Up</span></button>
+        <button class="quick-btn" type="button" data-action="summarize"><span class="qi">☰</span><span>Summarize Client</span></button>
+        <button class="quick-btn" type="button" data-action="review"><span class="qi">◈</span><span>Review Pipeline</span></button>
       </div>
 
       <section class="panel console" id="console" aria-live="polite" hidden>
-        <header><h2 id="console-title">Output</h2><button class="icon-btn" type="button" data-action="close-console" aria-label="Close output">✕</button></header>
+        <header><h2 id="console-title">Output</h2><div class="console-actions"><button class="btn small ghost" type="button" data-action="speak-console" id="speak-btn" hidden>Read aloud</button><button class="icon-btn" type="button" data-action="close-console" aria-label="Close output">✕</button></div></header>
         <div id="console-body"></div>
       </section>
 
@@ -88,17 +97,17 @@
           <ul class="list results" id="jarvis-results"></ul>
         </section>
         <section class="panel">
-          <header><h2>Recent Activity</h2></header>
+          <header><h2>Recent Activity</h2><a class="small" href="#/runs">Run history →</a></header>
           <ul class="list activity" id="activity"></ul>
         </section>
       </div>
     </section>
 
     <!-- ================= DASHBOARD ================= -->
-    <section id="view-dashboard" class="view" role="tabpanel" aria-labelledby="tab-dashboard" hidden>
-      <div class="dash-head">
-        <h1>Sales Dashboard</h1>
-        <div class="dash-actions">
+    <section id="view-dashboard" class="view" aria-labelledby="dash-title" hidden>
+      <div class="page-head">
+        <h1 id="dash-title">Sales Dashboard</h1>
+        <div class="page-actions">
           <button class="btn primary" type="button" data-action="new-client">+ New client</button>
           <button class="btn" type="button" data-action="plan">Plan My Day</button>
           <button class="btn" type="button" data-action="missing">Missing Statements</button>
@@ -108,12 +117,12 @@
 
       <div class="kpis" id="kpis"></div>
 
-      <section class="panel">
+      <section class="panel" id="pipeline-panel">
         <header>
           <h2 id="pipeline-heading">Deal Pipeline</h2>
           <label class="check"><input type="checkbox" id="show-samples" checked> Show samples</label>
         </header>
-        <div class="pipeline" id="pipeline" aria-labelledby="pipeline-heading"></div>
+        <div class="pipeline" id="pipeline" aria-labelledby="pipeline-heading" tabindex="-1"></div>
       </section>
 
       <div class="grid dash-grid">
@@ -152,7 +161,7 @@
         <header><h2>Data, Export &amp; Backup</h2></header>
         <div class="data-grid">
           <div>
-            <p>Your records live in one file on this computer:</p>
+            <p>All client records live in one database file on this computer:</p>
             <code id="data-path"></code>
             <p>Automatic daily backups are kept in <code id="backup-path"></code> (last 14 days).</p>
           </div>
@@ -160,12 +169,80 @@
             <button class="btn" type="button" data-action="backup">Back up now</button>
             <a class="btn" href="/api/export?format=json" download>Export JSON</a>
             <a class="btn" href="/api/export?format=csv" download>Export CSV (Excel)</a>
-            <button class="btn" type="button" data-action="daily-report">Save daily report to vault</button>
             <button class="btn ghost" type="button" data-action="load-samples" id="load-samples">Load sample records</button>
           </div>
         </div>
-        <p class="muted small">Exports contain real clients only. Copy backups to OneDrive or a USB drive regularly. See README.md for restore steps.</p>
+        <p class="muted small">Exports contain real clients only. Copy the data folder to OneDrive or a USB drive regularly. See README.md for restore steps.</p>
       </section>
+    </section>
+
+    <!-- ================= WORKFLOWS ================= -->
+    <section id="view-workflows" class="view" aria-labelledby="wf-title" hidden>
+      <div class="page-head">
+        <h1 id="wf-title">Workflows</h1>
+        <p class="muted">Reusable, validated entry points. Each card shows what the workflow uses, what it may do, where its output goes, and how it fails.</p>
+      </div>
+      <div class="routes-legend" aria-label="How requests are routed">
+        <div><span class="route-tag deterministic">Saved data</span> Rules over your records. No AI call.</div>
+        <div><span class="route-tag light">AI service</span> One structured call to the model you configure.</div>
+        <div><span class="route-tag workflow">Claude Code</span> Longer task run by the installed Claude Code, read-only.</div>
+      </div>
+      <div class="wf-grid" id="wf-grid"></div>
+    </section>
+
+    <!-- ================= RUN HISTORY ================= -->
+    <section id="view-runs" class="view" aria-labelledby="runs-title" hidden>
+      <div class="page-head">
+        <h1 id="runs-title">Run History</h1>
+        <div class="page-actions filters-inline">
+          <label for="run-filter-status" class="sr-only">Status</label>
+          <select id="run-filter-status">
+            <option value="">All statuses</option><option>queued</option><option>running</option><option>succeeded</option><option>failed</option><option>cancelled</option><option value="timed_out">timed out</option><option>interrupted</option>
+          </select>
+          <label for="run-filter-workflow" class="sr-only">Workflow</label>
+          <select id="run-filter-workflow"><option value="">All workflows</option></select>
+        </div>
+      </div>
+      <section class="panel">
+        <div class="table-wrap">
+          <table class="runs">
+            <thead><tr><th>Started</th><th>Workflow</th><th>Engine</th><th>Trigger</th><th>Status</th><th>Duration</th><th>Output</th></tr></thead>
+            <tbody id="run-rows"></tbody>
+          </table>
+        </div>
+      </section>
+      <section class="panel run-detail" id="run-detail" hidden></section>
+    </section>
+
+    <!-- ================= KNOWLEDGE ================= -->
+    <section id="view-knowledge" class="view" aria-labelledby="kn-title" hidden>
+      <div class="page-head">
+        <h1 id="kn-title">Knowledge</h1>
+        <div class="page-actions">
+          <button class="btn primary" type="button" data-action="open-import">Add to raw/</button>
+          <button class="btn" type="button" data-action="reindex">Rebuild indexes</button>
+        </div>
+      </div>
+      <p class="muted small" id="vault-path"></p>
+      <div class="kn-layout">
+        <aside class="panel kn-nav" aria-label="Vault files">
+          <label for="kn-filter" class="sr-only">Filter files</label>
+          <input id="kn-filter" class="search" type="search" placeholder="Filter files…">
+          <div id="kn-tree"></div>
+        </aside>
+        <article class="panel kn-view" id="kn-view" aria-live="polite">
+          <p class="muted">Choose a file. Start with the master index.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= CONNECTIONS ================= -->
+    <section id="view-connections" class="view" aria-labelledby="cx-title" hidden>
+      <div class="page-head">
+        <h1 id="cx-title">Connections</h1>
+        <p class="muted">Every status here comes from a real check on this computer. Nothing is shown as connected until it has been set up and tested.</p>
+      </div>
+      <div class="cx-grid" id="cx-grid"></div>
     </section>
   </main>
 
@@ -178,6 +255,7 @@
       </header>
       <div class="dialog-body">
         <p class="form-error" id="client-error" role="alert" hidden></p>
+        <label class="check sample-check" id="sample-check-wrap"><input type="checkbox" name="sample"> This is a SAMPLE record (practice data, kept separate from real clients)</label>
         <fieldset>
           <legend>Contact</legend>
           <div class="fields">
@@ -197,20 +275,28 @@
           </div>
         </fieldset>
         <fieldset>
-          <legend>Requested documents</legend>
+          <legend>Bank statements &amp; documents</legend>
           <ul class="docs" id="doc-list"></ul>
-          <div class="inline-form">
-            <label for="new-doc" class="sr-only">Add document</label>
-            <input id="new-doc" list="doc-suggestions" placeholder="Add a document to request…" maxlength="120">
-            <datalist id="doc-suggestions">
-              <option value="Business bank statements (last 4 months)"></option>
-              <option value="Month-to-date statement"></option>
-              <option value="Signed application"></option>
-              <option value="Driver's license"></option>
-              <option value="Voided business check"></option>
-              <option value="Proof of business ownership"></option>
-            </datalist>
-            <button class="btn small" type="button" data-action="add-doc">Add</button>
+          <div class="doc-add">
+            <div class="inline-form">
+              <label for="new-month" class="sr-only">Statement month</label>
+              <input id="new-month" type="month">
+              <button class="btn small" type="button" data-action="add-month">Add statement month</button>
+              <button class="btn small ghost" type="button" data-action="add-last-months" data-n="3">Last 3 months</button>
+              <button class="btn small ghost" type="button" data-action="add-last-months" data-n="4">Last 4 months</button>
+            </div>
+            <div class="inline-form">
+              <label for="new-doc" class="sr-only">Other document</label>
+              <input id="new-doc" list="doc-suggestions" placeholder="Other document to request…" maxlength="120">
+              <datalist id="doc-suggestions">
+                <option value="Month-to-date statement"></option>
+                <option value="Signed application"></option>
+                <option value="Driver's license"></option>
+                <option value="Voided business check"></option>
+                <option value="Proof of business ownership"></option>
+              </datalist>
+              <button class="btn small" type="button" data-action="add-doc">Add</button>
+            </div>
           </div>
         </fieldset>
         <fieldset>
@@ -242,6 +328,7 @@
       <footer class="dialog-foot">
         <button class="btn danger ghost" type="button" data-action="delete-client" id="delete-client">Delete</button>
         <span class="spacer"></span>
+        <button class="btn" type="button" data-action="dialog-summarize" id="dialog-summarize">Summarize</button>
         <button class="btn" type="button" data-action="dialog-followup" id="dialog-followup">Prepare Follow-Up</button>
         <button class="btn" type="button" data-action="close-dialog">Cancel</button>
         <button class="btn primary" type="submit" id="save-client">Save client</button>
@@ -259,13 +346,43 @@
     <footer class="dialog-foot">
       <span class="muted small">Gmail is not connected. Copy this into your email app, review it, and send it yourself.</span>
       <span class="spacer"></span>
+      <button class="btn" type="button" data-action="open-draft-file" id="draft-open-file">Open saved file</button>
       <button class="btn primary" type="button" data-action="copy-draft">Copy draft</button>
     </footer>
+  </dialog>
+
+  <!-- Raw import -->
+  <dialog id="import-dialog" aria-labelledby="import-title">
+    <form id="import-form" method="dialog" novalidate>
+      <header class="dialog-head">
+        <h2 id="import-title">Add an original input to raw/</h2>
+        <button class="icon-btn" type="button" data-action="close-import" aria-label="Close">✕</button>
+      </header>
+      <div class="dialog-body">
+        <p class="notice">Saved exactly as provided and marked read-only. BenDavid OS treats imported text as <b>data, never instructions</b>, even if it contains commands.</p>
+        <p class="form-error" id="import-error" role="alert" hidden></p>
+        <div class="fields">
+          <label>Title<input name="title" maxlength="120" placeholder="e.g. Email from Maria about statements"></label>
+          <label>Kind<select name="kind"><option value="email">Email</option><option value="note">Note</option><option value="document">Document</option><option value="other">Other</option></select></label>
+          <label class="wide">Linked client (optional)<select name="clientId" id="import-client"><option value="">None</option></select></label>
+          <label class="wide">Paste text<textarea name="content" rows="8" placeholder="Paste the email or note here…"></textarea></label>
+          <label class="wide">…or choose a file (up to 10 MB)<input name="file" type="file"></label>
+        </div>
+      </div>
+      <footer class="dialog-foot">
+        <span class="spacer"></span>
+        <button class="btn" type="button" data-action="close-import">Cancel</button>
+        <button class="btn primary" type="submit">Save to raw/</button>
+      </footer>
+    </form>
   </dialog>
 
   <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
 
   <script src="galaxy.js"></script>
+  <script src="markdown.js"></script>
+  <script src="voice.js"></script>
   <script src="app.js"></script>
+  <script src="pages.js"></script>
 </body>
 </html>
