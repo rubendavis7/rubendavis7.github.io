@@ -29,7 +29,7 @@ class TestServer {
     return new Promise((resolve, reject) => {
       const env = {
         ...process.env,
-        PORT: '0', BENDAVID_DATA_DIR: this.data, BENDAVID_VAULT_DIR: this.vault,
+        PORT: '0', BENDAVID_READY_LINE: '1', BENDAVID_DATA_DIR: this.data, BENDAVID_VAULT_DIR: this.vault,
         ANTHROPIC_API_KEY: '', BENDAVID_LIGHT_MODEL: '', BENDAVID_SCHEDULER_TICK_MS: '3600000',
         ...this.env,
       };

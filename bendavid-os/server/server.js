@@ -373,7 +373,8 @@ server.listen(config.PORT, config.HOST, () => {
   actualPort = server.address().port;
   scheduler.start();
   const on = store.data.settings.schedules.filter((s) => s.enabled).length;
-  console.log(`BENDAVID_OS_LISTENING ${actualPort}`);
+  // Machine-readable ready line for test harnesses only; people see the message below.
+  if (process.env.BENDAVID_READY_LINE === '1') console.log(`BENDAVID_OS_LISTENING ${actualPort}`);
   console.log(`\n  BenDavid OS ${config.VERSION} is running at http://localhost:${actualPort}  (or http://127.0.0.1:${actualPort})`);
   console.log(`  Data:      ${store.file}${store.migration ? ` (upgraded from schema v${store.migration.from}; backup kept)` : ''}`);
   console.log(`  Vault:     ${vault.dir}`);
