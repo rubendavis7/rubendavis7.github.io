@@ -22,6 +22,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { writeFileAtomic } = require('./fsutil');
 
 const SECTIONS = [
   { id: 'raw', title: 'Raw inputs', desc: 'Original inputs you intentionally provide. BenDavid OS never edits them.' },
@@ -176,16 +177,14 @@ class Vault {
       if (norm(fs.readFileSync(file, 'utf8')) === text) return { status: 'unchanged', path: relPath };
       if (!this.isPristine(file)) {
         const altRel = relPath.replace(/\.md$/, '.generated.md');
-        fs.writeFileSync(this.abs(altRel), text);
+        writeFileAtomic(this.abs(altRel), text);
         const result = { status: 'protected', path: relPath, wroteInstead: altRel, message: `${relPath} was edited outside BenDavid OS, so it was not overwritten. The new version is in ${altRel}.` };
         this.onEvent(result);
         this.scheduleIndexes();
         return result;
       }
     }
-    const tmp = `${file}.tmp`;
-    fs.writeFileSync(tmp, text);
-    fs.renameSync(tmp, file);
+    writeFileAtomic(file, text);
     this.scheduleIndexes();
     return { status: 'written', path: relPath };
   }
@@ -220,7 +219,7 @@ class Vault {
     const inner = `\n${norm(content).trim()}\n`;
     const block = `<!-- bendavid:begin id=${blockId} hash=${hash(inner)} -->${inner}<!-- bendavid:end id=${blockId} -->`;
     if (!fs.existsSync(file)) {
-      fs.writeFileSync(file, `${header ? `${norm(header).trim()}\n\n` : ''}${block}\n`);
+      writeFileAtomic(file, `${header ? `${norm(header).trim()}\n\n` : ''}${block}\n`);
       this.scheduleIndexes();
       return { status: 'written', path: relPath };
     }
@@ -228,7 +227,7 @@ class Vault {
     const re = new RegExp(`<!-- bendavid:begin id=${blockId} hash=([0-9a-f]+) -->([\\s\\S]*?)<!-- bendavid:end id=${blockId} -->`);
     const m = re.exec(text);
     if (!m) {
-      fs.writeFileSync(file, `${text.replace(/\s*$/, '')}\n\n${block}\n`);
+      writeFileAtomic(file, `${text.replace(/\s*$/, '')}\n\n${block}\n`);
       this.scheduleIndexes();
       return { status: 'appended', path: relPath };
     }
@@ -238,7 +237,7 @@ class Vault {
       return result;
     }
     if (m[2] === inner) return { status: 'unchanged', path: relPath };
-    fs.writeFileSync(file, text.replace(re, block));
+    writeFileAtomic(file, text.replace(re, block));
     this.scheduleIndexes();
     return { status: 'written', path: relPath };
   }

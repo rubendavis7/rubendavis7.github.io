@@ -11,6 +11,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { DEFAULT_WORKSPACE, getWorkspace } = require('./workspaces');
 const { isMonth, monthLabel, monthsBefore } = require('./time');
+const { writeFileAtomic } = require('./fsutil');
 
 const SCHEMA_VERSION = 2;
 const MAX_ACTIVITY = 500;
@@ -190,9 +191,7 @@ class Store {
   persist() {
     this.autoBackup();
     this.data.savedAt = new Date().toISOString();
-    const tmp = `${this.file}.tmp`;
-    fs.writeFileSync(tmp, JSON.stringify(this.data, null, 2));
-    fs.renameSync(tmp, this.file);
+    writeFileAtomic(this.file, JSON.stringify(this.data, null, 2));
   }
 
   autoBackup() {

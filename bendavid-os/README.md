@@ -16,6 +16,16 @@ Ruben Davis's personal workflow system. **Delta Capital** is the first workspace
 
 Tip: right-click the `.bat` file → *Send to* → *Desktop (create shortcut)*. If you see "port 4321 is already in use", it's already running: just open the address.
 
+### If the browser says "This site can't be reached" or "localhost refused to connect"
+That means BenDavid OS isn't running **on the computer you're using**. `localhost` always means "this computer", so a copy running anywhere else (for example in a Claude cloud session) can't be opened from your PC.
+1. Double-click `Start BenDavid OS.bat` and keep its black window open. The browser opens by itself once the app is ready.
+2. Read the black window:
+   - *"Node.js is not installed"*: install Node.js LTS from https://nodejs.org, then double-click the file again.
+   - *"BenDavid OS is running at http://localhost:4321"*: open that address. If it still won't load, try http://127.0.0.1:4321.
+   - *"Port 4321 is already in use"*: it's already running in another window, so just open the address. If something else uses that port, put `PORT=4322` in `bendavid-os\.env` and open http://localhost:4322.
+   - *Anything else* (red error text): copy it or take a screenshot and send it to me.
+3. If the window flashes and closes, open the `bendavid-os` folder, click the address bar, type `cmd`, press Enter, then run `node server\server.js` to see the message.
+
 **Upgrading from the first version** is automatic. On first start, the database is upgraded to the new format after an untouched copy is saved in `data\backups\pre-migration-v1-….json`, and old vault folders (`Clients`, `Daily Reports`) are moved into the new layout with nothing deleted that you edited. See `vault\system\migration-log.md`.
 
 ## Pages

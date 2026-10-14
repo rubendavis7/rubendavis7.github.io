@@ -177,3 +177,33 @@ test('Markdown renderer escapes HTML and only links to http(s) or vault notes', 
   assert.match(html, /<table>/);
   assert.match(html, /type="checkbox" disabled checked/);
 });
+
+test('saves survive a brief Windows-style file lock (EPERM) and leave no temp file', () => {
+  const d = tempDirs('bdos-lock-');
+  fs.mkdirSync(d.dir, { recursive: true });
+  const file = path.join(d.dir, 'x.json');
+  fs.writeFileSync(file, 'old');
+  const { writeFileAtomic } = require('../server/fsutil');
+  const real = fs.renameSync;
+  let failures = 2;
+  fs.renameSync = (...args) => {
+    if (failures-- > 0) throw Object.assign(new Error('locked'), { code: 'EPERM' });
+    return real(...args);
+  };
+  try {
+    writeFileAtomic(file, 'new');
+  } finally {
+    fs.renameSync = real;
+  }
+  assert.equal(fs.readFileSync(file, 'utf8'), 'new');
+  assert.ok(!fs.existsSync(`${file}.tmp`));
+  fs.renameSync = () => { throw Object.assign(new Error('locked'), { code: 'EPERM' }); };
+  try {
+    assert.throws(() => writeFileAtomic(file, 'never'), /locked/);
+  } finally {
+    fs.renameSync = real;
+  }
+  assert.equal(fs.readFileSync(file, 'utf8'), 'new', 'a save that cannot complete leaves the old file intact');
+  assert.ok(!fs.existsSync(`${file}.tmp`));
+  fs.rmSync(d.dir, { recursive: true, force: true });
+});

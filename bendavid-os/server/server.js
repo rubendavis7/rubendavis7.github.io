@@ -374,7 +374,7 @@ server.listen(config.PORT, config.HOST, () => {
   scheduler.start();
   const on = store.data.settings.schedules.filter((s) => s.enabled).length;
   console.log(`BENDAVID_OS_LISTENING ${actualPort}`);
-  console.log(`\n  BenDavid OS ${config.VERSION} is running at http://localhost:${actualPort}`);
+  console.log(`\n  BenDavid OS ${config.VERSION} is running at http://localhost:${actualPort}  (or http://127.0.0.1:${actualPort})`);
   console.log(`  Data:      ${store.file}${store.migration ? ` (upgraded from schema v${store.migration.from}; backup kept)` : ''}`);
   console.log(`  Vault:     ${vault.dir}`);
   console.log(`  Time zone: ${clock.tz} (today is ${clock.today()})`);

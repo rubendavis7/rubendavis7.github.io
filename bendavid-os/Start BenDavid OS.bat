@@ -15,7 +15,10 @@ if not exist "node_modules\@anthropic-ai\sdk\package.json" (
   call npm install --omit=dev --no-audit --no-fund
   if errorlevel 1 echo  Could not install it. Everything else still works; the AI service will show as unavailable.
 )
-echo Starting BenDavid OS...
-start "" /b cmd /c "timeout /t 2 >nul && start http://localhost:4321"
+echo Starting BenDavid OS... your browser opens as soon as it is ready.
+rem Wait (up to 60 seconds) until the app answers, then open the browser.
+start "" /b powershell -NoProfile -Command "for ($i = 0; $i -lt 120; $i++) { try { Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 'http://127.0.0.1:4321/api/health' | Out-Null; Start-Process 'http://127.0.0.1:4321'; break } catch { Start-Sleep -Milliseconds 500 } }"
 node server\server.js
+echo.
+echo  BenDavid OS has stopped. If you did not stop it yourself, read the message above.
 pause
