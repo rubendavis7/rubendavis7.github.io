@@ -1,0 +1,146 @@
+@import "tailwindcss";
+
+/*
+ * BRAND COLORS
+ * `brand` is the accent (deep emerald). `ink` is the dark navy used for the
+ * hero, footer and headings. To re-skin the site, change these values only.
+ */
+@theme {
+  --color-brand-50: #ecfdf5;
+  --color-brand-100: #d1fae5;
+  --color-brand-200: #a7f3d0;
+  --color-brand-300: #6ee7b7;
+  --color-brand-400: #34d399;
+  --color-brand-500: #10b981;
+  --color-brand-600: #059669;
+  --color-brand-700: #047857;
+  --color-brand-800: #065f46;
+  --color-brand-900: #064e3b;
+
+  --color-ink-50: #f5f7fa;
+  --color-ink-100: #eaeef4;
+  --color-ink-200: #d5dce7;
+  --color-ink-300: #b0bccd;
+  --color-ink-400: #8493aa;
+  --color-ink-500: #5d6c84;
+  --color-ink-600: #43516a;
+  --color-ink-700: #2b3850;
+  --color-ink-800: #172238;
+  --color-ink-900: #0c1628;
+  --color-ink-950: #060d1a;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+  -webkit-text-size-adjust: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  background: #ffffff;
+  color: var(--color-ink-900);
+  font-family: var(--font-sans);
+  overflow-x: clip;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+/* Dark gradient used by the hero and footer. */
+.bg-ink-gradient {
+  background:
+    radial-gradient(60rem 30rem at 85% -10%, rgb(16 185 129 / 0.22), transparent 60%),
+    radial-gradient(40rem 24rem at 0% 110%, rgb(5 150 105 / 0.16), transparent 60%),
+    linear-gradient(160deg, var(--color-ink-950), var(--color-ink-900) 55%, var(--color-ink-800));
+}
+
+/* ------------------------------ Range slider ------------------------------ */
+.sales-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 2.75rem; /* tall hit area for thumbs */
+  background: transparent;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+.sales-slider::-webkit-slider-runnable-track {
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    var(--color-brand-600) var(--fill, 0%),
+    var(--color-ink-200) var(--fill, 0%)
+  );
+}
+.sales-slider::-moz-range-track {
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--color-ink-200);
+}
+.sales-slider::-moz-range-progress {
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--color-brand-600);
+}
+.sales-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-top: -0.625rem;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 3px solid var(--color-brand-700);
+  box-shadow: 0 2px 8px rgb(6 13 26 / 0.25);
+}
+.sales-slider::-moz-range-thumb {
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 3px solid var(--color-brand-700);
+  box-shadow: 0 2px 8px rgb(6 13 26 / 0.25);
+}
+
+/* --------------------------- Pill toggles and tabs -------------------------
+ * Used by the time-in-business pills and the product tabs.
+ * Colors are explicit and change instantly: a color fade here leaves two
+ * pills half-gray at once right after a tap. Hover styling is limited to
+ * devices with a real pointer so a tapped pill never stays shaded on phones.
+ * ------------------------------------------------------------------------ */
+.pill-option {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: #ffffff;
+  color: #0c1628;
+  border: 2px solid #d5dce7;
+  font-weight: 500;
+  transition: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.pill-option[data-invalid="true"] {
+  border-color: #f87171;
+}
+.pill-option[aria-checked="true"],
+.pill-option[aria-selected="true"] {
+  background-color: #060d1a;
+  color: #ffffff;
+  border-color: #060d1a;
+}
+@media (hover: hover) and (pointer: fine) {
+  .pill-option:not([aria-checked="true"]):not([aria-selected="true"]):hover {
+    background-color: #f5f7fa;
+    border-color: #5d6c84;
+  }
+}
