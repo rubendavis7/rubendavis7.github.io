@@ -27,7 +27,7 @@ export function VerifyTag({ k, className }: { k: VerifyKey; className?: string }
 }
 
 const pill =
-  "inline-flex items-center justify-center gap-2 rounded-full font-semibold whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex appearance-none items-center justify-center gap-2 rounded-full font-semibold whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-60";
 
 const variants = {
   primary: "bg-brand-700 text-white hover:bg-brand-800",

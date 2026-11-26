@@ -5,7 +5,7 @@ import { Check, Landmark, RefreshCw, Wallet } from "lucide-react";
 import { useRef, useState, type KeyboardEvent } from "react";
 import { PRODUCTS, type ProductId } from "@/lib/site-config";
 import { PhotoSlot } from "./PhotoSlot";
-import { Container, PillLink, SectionHeading, VerifyTag, cx } from "./ui";
+import { Container, PillLink, SectionHeading, VerifyTag } from "./ui";
 
 const icons: Record<ProductId, typeof Wallet> = {
   "working-capital": Wallet,
@@ -54,12 +54,7 @@ export function ProductTabs() {
               aria-controls="product-panel"
               tabIndex={i === active ? 0 : -1}
               onClick={() => setActive(i)}
-              className={cx(
-                "h-11 shrink-0 rounded-full border-2 px-5 text-sm font-bold whitespace-nowrap transition-colors",
-                i === active
-                  ? "border-ink-950 bg-ink-950 text-white"
-                  : "border-ink-200 bg-white text-ink-800 hover:border-ink-500",
-              )}
+              className="pill-option h-11 shrink-0 rounded-full px-5 text-sm whitespace-nowrap"
             >
               {p.tab}
             </button>

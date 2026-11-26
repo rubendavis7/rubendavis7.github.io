@@ -1,7 +1,6 @@
 "use client";
 
 import { TIB_TIERS, type TibId } from "@/lib/calculator";
-import { cx } from "./ui";
 
 /** The five time-in-business toggle buttons. Works as a radio group. */
 export function TibPills({
@@ -35,12 +34,9 @@ export function TibPills({
             aria-checked={selected}
             data-tib={tier.id}
             onClick={() => onChange(tier.id)}
-            className={cx(
-              "h-11 rounded-full border-2 px-4 text-sm font-semibold whitespace-nowrap transition-colors",
-              selected
-                ? "border-ink-950 bg-ink-950 text-white"
-                : cx("bg-white text-ink-800 hover:border-ink-500", invalid ? "border-red-400" : "border-ink-200"),
-            )}
+            data-invalid={invalid && !selected ? "true" : undefined}
+            // Colors live in .pill-option (app/globals.css): solid, instant, no touch hover.
+            className="pill-option h-11 rounded-full px-4 text-sm whitespace-nowrap"
           >
             {tier.label}
           </button>

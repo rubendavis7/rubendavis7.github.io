@@ -55,7 +55,14 @@ export function FeedbackWidget({ applicationId }: { applicationId: string }) {
         How easy was our application process?
       </h2>
 
-      <div role="radiogroup" aria-labelledby="feedback-title" className="mt-3 flex gap-1" onMouseLeave={() => setHover(0)}>
+      <div
+        role="radiogroup"
+        aria-labelledby="feedback-title"
+        className="mt-3 flex gap-1"
+        onPointerLeave={(e) => {
+          if (e.pointerType === "mouse") setHover(0);
+        }}
+      >
         {LABELS.map((label, i) => {
           const value = i + 1;
           return (
@@ -67,11 +74,16 @@ export function FeedbackWidget({ applicationId }: { applicationId: string }) {
               aria-label={`${value} out of 5: ${label}`}
               data-testid={`rate-${value}`}
               disabled={commentStatus === "saved"}
-              onMouseEnter={() => setHover(value)}
-              onFocus={() => setHover(value)}
+              // Preview stars for a mouse or keyboard only, so a tap can't leave a stale preview.
+              onPointerEnter={(e) => {
+                if (e.pointerType === "mouse") setHover(value);
+              }}
+              onFocus={(e) => {
+                if (e.target.matches(":focus-visible")) setHover(value);
+              }}
               onBlur={() => setHover(0)}
               onClick={() => rate(value)}
-              className="flex h-12 w-12 items-center justify-center rounded-full transition-transform hover:scale-110 disabled:hover:scale-100"
+              className="flex h-12 w-12 appearance-none items-center justify-center rounded-full transition-transform [-webkit-tap-highlight-color:transparent] hover:scale-110 disabled:hover:scale-100"
             >
               <Star
                 className={cx("h-8 w-8 transition-colors", value <= shown ? "fill-amber-400 text-amber-500" : "text-ink-300")}

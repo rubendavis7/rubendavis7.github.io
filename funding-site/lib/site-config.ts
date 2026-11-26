@@ -58,7 +58,7 @@ export const TIMING = {
 /** [VERIFY] Minimum criteria shown in the qualification grid. */
 export const QUALIFICATION = [
   { value: "550+", label: "Credit score", note: "Lower scores can still be reviewed." },
-  { value: "6+ months", label: "Time in business", note: "Open and taking deposits." },
+  { value: "3+ months", label: "Time in business", note: "Open and taking deposits." },
   { value: "$15K+", label: "Monthly revenue", note: "Deposited into a business bank account." },
   { value: "3 months", label: "Business bank statements", note: "Most recent. Nothing else to start." },
 ] as const;

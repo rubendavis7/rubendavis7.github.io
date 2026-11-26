@@ -112,3 +112,35 @@ body {
   border: 3px solid var(--color-brand-700);
   box-shadow: 0 2px 8px rgb(6 13 26 / 0.25);
 }
+
+/* --------------------------- Pill toggles and tabs -------------------------
+ * Used by the time-in-business pills and the product tabs.
+ * Colors are explicit and change instantly: a color fade here leaves two
+ * pills half-gray at once right after a tap. Hover styling is limited to
+ * devices with a real pointer so a tapped pill never stays shaded on phones.
+ * ------------------------------------------------------------------------ */
+.pill-option {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: #ffffff;
+  color: #0c1628;
+  border: 2px solid #d5dce7;
+  font-weight: 500;
+  transition: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.pill-option[data-invalid="true"] {
+  border-color: #f87171;
+}
+.pill-option[aria-checked="true"],
+.pill-option[aria-selected="true"] {
+  background-color: #060d1a;
+  color: #ffffff;
+  border-color: #060d1a;
+}
+@media (hover: hover) and (pointer: fine) {
+  .pill-option:not([aria-checked="true"]):not([aria-selected="true"]):hover {
+    background-color: #f5f7fa;
+    border-color: #5d6c84;
+  }
+}

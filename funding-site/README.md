@@ -31,7 +31,7 @@ The site ships with placeholders. Each one shows an amber **VERIFY** tag on the 
 3. **`/privacy`, `/terms`, `/disclosures`**: template text. Have an attorney review.
 4. **Photos**: `PhotoSlot` draws a placeholder. Put real photos in `public/images/` and pass `src="/images/..."` (see `components/ValueProps.tsx` and `components/ProductTabs.tsx`).
 
-Note: the calculator has a "3 – 9 months" tier while the placeholder qualification minimum is "6+ months". Make those agree when you set the real numbers.
+The placeholder minimum time in business is "3+ months", matching the calculator's first tier. If the real minimum is different, change both `QUALIFICATION` and `TIB_TIERS`.
 
 ## Where things live
 

@@ -35,7 +35,7 @@ export function Header() {
           </PillLink>
           <button
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-ink-900 hover:bg-ink-100"
+            className="inline-flex h-10 w-10 appearance-none items-center justify-center rounded-full bg-white text-ink-900 hover:bg-ink-100"
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
             aria-controls="site-menu"

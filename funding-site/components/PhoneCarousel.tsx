@@ -137,9 +137,17 @@ export function PhoneCarousel() {
       role="group"
       aria-roledescription="carousel"
       aria-label="App preview"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
+      // Pause for a mouse hover or keyboard focus only. On touchscreens a tap
+      // would otherwise leave the carousel "hovered" and paused for good.
+      onPointerEnter={(e) => {
+        if (e.pointerType === "mouse") setPaused(true);
+      }}
+      onPointerLeave={(e) => {
+        if (e.pointerType === "mouse") setPaused(false);
+      }}
+      onFocus={(e) => {
+        if (e.target.matches(":focus-visible")) setPaused(true);
+      }}
       onBlur={() => setPaused(false)}
     >
       <div className="relative h-[480px] w-[244px] rounded-[2.75rem] bg-ink-950 p-2.5 shadow-2xl ring-1 ring-white/15">
@@ -182,7 +190,7 @@ export function PhoneCarousel() {
             aria-label={`Show slide ${i + 1}: ${s.label}`}
             aria-current={i === index}
             onClick={() => setIndex(i)}
-            className="flex h-8 w-8 items-center justify-center"
+            className="flex h-8 w-8 appearance-none items-center justify-center [-webkit-tap-highlight-color:transparent]"
           >
             <span className={cx("h-2.5 rounded-full transition-all", i === index ? "w-7 bg-brand-400" : "w-2.5 bg-white/35")} />
           </button>
