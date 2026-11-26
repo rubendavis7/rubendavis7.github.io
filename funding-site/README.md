@@ -26,7 +26,7 @@ With no env vars set, applications and feedback are saved to `data/*.jsonl` (git
 
 The site ships with placeholders. Each one shows an amber **VERIFY** tag on the page until you confirm it.
 
-1. **`lib/site-config.ts`**: phone, email, mailing address, hours, qualification minimums, product wording and example amounts, testimonials, response and decision times, TCPA consent text. Flip the matching flag in `VERIFIED` to `true` when a group is confirmed.
+1. **`lib/site-config.ts`**: company story for `/about`, phone, email, mailing address, hours, qualification minimums, product wording and example amounts, testimonials, response and decision times, TCPA consent text. Flip the matching flag in `VERIFIED` to `true` when a group is confirmed.
 2. **`lib/calculator.ts`**: revenue multiples, factor rates, terms, max funding and range spread. These are placeholders, not real underwriting numbers. If you change them, update the expected numbers in `lib/calculator.test.ts`.
 3. **`/privacy`, `/terms`, `/disclosures`**: template text. Have an attorney review.
 4. **Photos**: `PhotoSlot` draws a placeholder. Put real photos in `public/images/` and pass `src="/images/..."` (see `components/ValueProps.tsx` and `components/ProductTabs.tsx`).

@@ -20,6 +20,8 @@ export const VERIFIED = {
   timing: false,
   /** Multipliers, factor rates and terms in lib/calculator.ts. */
   calculator: false,
+  /** Company story on /about. */
+  about: false,
 } as const;
 
 export type VerifyKey = keyof typeof VERIFIED;
@@ -197,12 +199,25 @@ export const CONSENT = {
 } as const;
 
 export const NAV_LINKS = [
-  { href: "/#how-it-works", label: "How it works" },
-  { href: "/#qualify", label: "Do I qualify?" },
-  { href: "/#products", label: "Products" },
+  { href: "/how-it-works", label: "How it works" },
+  { href: "/products", label: "Products" },
   { href: "/calculator", label: "Funding calculator" },
+  { href: "/faq", label: "FAQ" },
+  { href: "/about", label: "About us" },
+  { href: "/contact", label: "Contact" },
   { href: "/apply", label: "Apply now" },
 ] as const;
+
+/**
+ * [VERIFY] About-page facts. Replace each placeholder with the real thing.
+ * Don't publish this page with the placeholders still in it.
+ */
+export const ABOUT = {
+  story: [
+    "[VERIFY — Company story: when Delta Capital Group started, where you're based and who runs it.]",
+    "[VERIFY — Who you fund: the kinds of businesses and industries you work with most.]",
+  ],
+} as const;
 
 export const LEGAL_LINKS = [
   { href: "/privacy", label: "Privacy Policy" },
